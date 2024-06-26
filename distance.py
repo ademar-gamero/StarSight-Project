@@ -36,11 +36,6 @@ class DB():
         self.connection.commit()
         return cur.lastrowid
 
-class Prompt():
-    def __init__(self,latitude,longitude):
-        self.location
-
-counter = 5
 worst = False
 city_counter = 0
 location_longitude = None
@@ -49,8 +44,35 @@ a = 45.724115
 b = -108.230242
 radius = 20
 
-#response = requests.get(f"http://getnearbycities.geobytes.com/GetNearbyCities?radius={radius}&latitude={latitudes}&longitude={longitudes}")
-#dict = json.loads(response.text) 
+class CityAPI():
+    def __init__(self,latitude,longitude):
+        self.location_latitude = latitude 
+        self.location_longitude = longitude
+        self.radius = 20
+    def get_nearby_cities(self):
+        response = requests.get(f"http://getnearbycities.geobytes.com/GetNearbyCities?radius={self.radius}&latitude={self.location_latitude}&longitude={self            .location_longitude}")
+        city_list = json.loads(response.text) 
+        return city_list
+    def city_calculate(self,score):
+        #if len(dict) > 5:
+            #score -= 2
+            #city_counter += 6
+        #else:
+            #for element in dict:
+                #name = element[1]
+                #longitude = element[10]  
+                #latitude = element[8]
+                #api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
+                #response1 = requests.get(api_url,headers={'X-Api-Key':os.environ.get('NINJA_KEY')})
+                #dict2 = json.loads(response1.text)
+                #pop = dict2[0]["population"]
+                #if pop >= 50000:
+                    #counter -= 2
+            #if counter == 0:
+                #worst = True
+                #return score
+                #break
+    
 
 #db connection
 #connection = sqlite3.connect("star.db")
@@ -92,24 +114,6 @@ else:
 print(location_latitude)
 print(location_longitude)
 
-
-#if len(dict) > 5:
-    #counter -= 2
-    #city_counter += 6
-#else:
-    #for element in dict:
-        #name = element[1]
-        #longitude = element[10]  
-        #latitude = element[8]
-        #api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
-        #response1 = requests.get(api_url,headers={'X-Api-Key':os.environ.get('NINJA_KEY')})
-        #dict2 = json.loads(response1.text)
-        #pop = dict2[0]["population"]
-        #if pop >= 50000:
-            #counter -= 2
-        #if counter == 0:
-            #worst = True
-            #break
 
 #score calculation/optimal for star gazing or not?            
 class score():
