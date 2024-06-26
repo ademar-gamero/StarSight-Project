@@ -17,7 +17,6 @@ jobs:
         pip install coverage
 
       - name: Test with unittest
-        working-directory: 
         run: python3 -m unittest unit_tests.py
       - name: Check code coverage
         run: |
