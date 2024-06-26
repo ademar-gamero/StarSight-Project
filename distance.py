@@ -83,10 +83,6 @@ class CityAPI():
 var = DB("star.db")
 var.print_rows()
 
-#intro prompt
-print("Hello!, Welcome to the star gazer app!")
-print("if you would like to quit enter \q at anytime a prompt is given")
-print("Your saved locations: ")
 
 #Asking for longitude and lattitude
 response = int(input("Enter 0 to lookup a new location or enter a number matching a location to look up a saved location: "))    
@@ -125,6 +121,10 @@ class score():
             3:"SUB OPTIMAL-Stars may be visible",
             4:"SUB OPTIMAL-Stars may be visible",
             5:"OPTIMAL-Stars will be visible"}
+    def lower_score(val):
+        self.score = self.score - val
+        if self.score < 0:
+            self.score = 0
     def return_current_score():
         return self.score
     def print_current_score():
