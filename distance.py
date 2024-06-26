@@ -48,21 +48,26 @@ location_latitude = None
 a = 45.724115
 b = -108.230242
 radius = 20
+
 #response = requests.get(f"http://getnearbycities.geobytes.com/GetNearbyCities?radius={radius}&latitude={latitudes}&longitude={longitudes}")
 #dict = json.loads(response.text) 
+
 #db connection
 #connection = sqlite3.connect("star.db")
 #cur = connection.cursor()
 #cur.execute("SELECT * FROM saved_locations")
 #rows = cur.fetchall()
-#intro prompt
-var = DB("ssss.db")
+
+var = DB("star.db")
 var.print_rows()
+
+#intro prompt
 print("Hello!, Welcome to the star gazer app!")
+print("if you would like to quit enter \q at anytime a prompt is given")
 print("Your saved locations: ")
+
 #Asking for longitude and lattitude
 response = int(input("Enter 0 to lookup a new location or enter a number matching a location to look up a saved location: "))    
-print("if you would like to quit enter \q at anytime a prompt is given")
 if response == 0:
     while not isinstance(location_latitude,float) or not isinstance(location_longitude,float):
         location_latitude = input("Enter a latitude: ")
@@ -87,6 +92,7 @@ else:
 print(location_latitude)
 print(location_longitude)
 
+
 #if len(dict) > 5:
     #counter -= 2
     #city_counter += 6
@@ -106,7 +112,22 @@ print(location_longitude)
             #break
 
 #score calculation/optimal for star gazing or not?            
-#def scoreCalculation(city_counter,Point
+class score():
+    def __init__:
+        self.score = 5
+        self.score_card = {0:"NOT OPTIMAL-Stars will not be visible",
+            1:"NOT OPTIMAL-Stars will not be visible",
+            2:"NOT OPTIMAL-Stars will not be visible",
+            3:"SUB OPTIMAL-Stars may be visible",
+            4:"SUB OPTIMAL-Stars may be visible",
+            5:"OPTIMAL-Stars will be visible"}
+    def return_current_score():
+        return self.score
+    def print_current_score():
+        print(self.score)
+    def return_current_score_str():
+        return self.score_card[self.score]
+
         
 resp = input("Would you like to save the location(y)(n)?")
 if resp == "y":
