@@ -7,6 +7,9 @@ import sys
 #add location
 class DB():
     def __init__(self,db_name):
+        if db_name != "star.db":
+            print("Invalid Database")
+            sys.exit()
         self.connection = sqlite3.connect(db_name)
         self.cur = self.connection.cursor()
         
@@ -53,7 +56,7 @@ radius = 20
 #cur.execute("SELECT * FROM saved_locations")
 #rows = cur.fetchall()
 #intro prompt
-var = DB("star.db")
+var = DB("ssss.db")
 var.print_rows()
 print("Hello!, Welcome to the star gazer app!")
 print("Your saved locations: ")
