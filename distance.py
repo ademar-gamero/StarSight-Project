@@ -7,9 +7,6 @@ import sys
 #add location
 class DB():
     def __init__(self,db_name):
-        if db_name != "star.db":
-            print("Invalid Database")
-            sys.exit()
         self.connection = sqlite3.connect(db_name)
         self.cur = self.connection.cursor()
         
@@ -26,15 +23,28 @@ class DB():
         if rows == 0:
             print("No locations have been saved")
         else:
+            print("Your Saved Locations")
             for row in rows:
-                print(row)
+                print(f'ID: {row[0]} NAME: {row[1]} LATITUDE: {row[2]} LONGITUDE: {row[3]}')
 
     def add_location(self,location):
-        sql = '''INSERT INTO saved_locations(name,longitude,latitude)
-                VALUES(?,?,?)'''
-        self.cur.execute(sql,location)
-        self.connection.commit()
-        return cur.lastrowid
+        lat = location[1]
+        lon = location[2]
+        #checking if location is already saved
+        query = '''SELECT COUNT(*) AS match_count FROM saved_locations 
+              WHERE longitude = ? AND latitude = ? '''
+        self.cur.execute(query,(lat,lon))
+        result = self.cur.fetchone()[0]
+        if result > 0:
+            print("This location is already saved in the database")
+        else:
+            sql = '''INSERT INTO saved_locations(name,longitude,latitude)
+                    VALUES(?,?,?)'''
+            self.cur.execute(sql,location)
+            self.connection.commit()
+            return cur.lastrowid
+        return -1
+            
 
 worst = False
 city_counter = 0
@@ -53,25 +63,20 @@ class CityAPI():
         response = requests.get(f"http://getnearbycities.geobytes.com/GetNearbyCities?radius={self.radius}&latitude={self.location_latitude}&longitude={self            .location_longitude}")
         city_list = json.loads(response.text) 
         return city_list
-    def city_calculate(self,score):
-        #if len(dict) > 5:
-            #score -= 2
-            #city_counter += 6
-        #else:
-            #for element in dict:
-                #name = element[1]
-                #longitude = element[10]  
-                #latitude = element[8]
-                #api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
-                #response1 = requests.get(api_url,headers={'X-Api-Key':os.environ.get('NINJA_KEY')})
-                #dict2 = json.loads(response1.text)
-                #pop = dict2[0]["population"]
-                #if pop >= 50000:
-                    #counter -= 2
-            #if counter == 0:
-                #worst = True
-                #return score
-                #break
+    def city_calculate(self,score_obj,city_list):
+        if len(city_list) > 5:
+            score_obj.lower_score(2)
+        else:
+            for element in city_list:
+                name = element[1]
+                longitude = element[10]  
+                latitude = element[8]
+                api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
+                response1 = requests.get(api_url,headers={'X-Api-Key':os.environ.get('NINJA_KEY')})
+                dict2 = json.loads(response1.text)
+                pop = dict2[0]["population"]
+                if pop >= 50000:
+                    score_obj.score(2)
     
 
 #db connection
@@ -80,11 +85,12 @@ class CityAPI():
 #cur.execute("SELECT * FROM saved_locations")
 #rows = cur.fetchall()
 
-var = DB("star.db")
-var.print_rows()
+#var = DB("star.db")
+#var.print_rows()
 
 
 #Asking for longitude and lattitude
+'''
 response = int(input("Enter 0 to lookup a new location or enter a number matching a location to look up a saved location: "))    
 if response == 0:
     while not isinstance(location_latitude,float) or not isinstance(location_longitude,float):
@@ -109,11 +115,11 @@ else:
         location_longitude = rows[entry][3]
 print(location_latitude)
 print(location_longitude)
-
+'''
 
 #score calculation/optimal for star gazing or not?            
-class score():
-    def __init__:
+class score:
+    def __init__(self):
         self.score = 5
         self.score_card = {0:"NOT OPTIMAL-Stars will not be visible",
             1:"NOT OPTIMAL-Stars will not be visible",
@@ -121,23 +127,23 @@ class score():
             3:"SUB OPTIMAL-Stars may be visible",
             4:"SUB OPTIMAL-Stars may be visible",
             5:"OPTIMAL-Stars will be visible"}
-    def lower_score(val):
+    def lower_score(self,val):
         self.score = self.score - val
         if self.score < 0:
             self.score = 0
-    def return_current_score():
+    def return_current_score(self):
         return self.score
-    def print_current_score():
+    def print_current_score(self):
         print(self.score)
-    def return_current_score_str():
+    def return_current_score_str(self):
         return self.score_card[self.score]
 
         
-resp = input("Would you like to save the location(y)(n)?")
-if resp == "y":
-    name_given = input("What would you like to name this location?")
-    location = (name_given,location_longitude,location_latitudes)
-    add_location(connection,location)
-elif resp == "n":
-    resp1 = input("would you like to try looking up another location(y)(n)?")
+#resp = input("Would you like to save the location(y)(n)?")
+#if resp == "y":
+    #name_given = input("What would you like to name this location?")
+    #location = (name_given,location_longitude,location_latitudes)
+    #add_location(connection,location)
+#elif resp == "n":
+    #resp1 = input("would you like to try looking up another location(y)(n)?")
 
