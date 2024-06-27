@@ -11,6 +11,8 @@ location_latitude = None
 location_longitude = None
 resp = None
 while(resp != "q"):
+    location_latitude = None
+    location_longitude = None
     print("***************************************")
     print("Hello!, Welcome to the star sight app!")
     #Description
@@ -96,6 +98,13 @@ while(resp != "q"):
             except ValueError:
                 print("Please enter a valid id ")
                 continue
+            if resp_saved == 0:
+                resp = None
+                break
+            entry = resp_saved - 1
+            if entry < 0 or entry >= len(rows):
+                print("entry not found or not in bounds, please re-enter valid entry id")
+                continue
             flag2 = True
         print("--------------------------------------------------------------------")
         if resp_saved == 0:
@@ -104,13 +113,8 @@ while(resp != "q"):
             print("*************************************************************")
             continue
         else:
-            entry = resp_saved - 1
-            if entry < 0 or entry >= len(rows):
-                print("entry not found or not in bounds")
-            else:
-                location_latitude = rows[entry][3]
-                location_longitude = rows[entry][2] 
-                flag = True
+            location_latitude = rows[entry][3]
+            location_longitude = rows[entry][2] 
 
         city = CityAPI(location_latitude,location_longitude)
         local = city.get_nearby_cities()
