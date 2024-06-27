@@ -46,17 +46,13 @@ class WeatherAPI:
     # returns response
     def get_weather_response(latitude,longitude):
         my_api_key = os.getenv('API_KEY')
-
         url="http://api.weatherapi.com/v1//forecast.json"
-
         location = str(latitude) + "," + str(longitude) 
-
         response = requests.post(url, {
                                         'key': my_api_key,
                                         'q': location,
                                         'days': '2'
                                       })
-
         response = response.json()
 
         if 'error' in response.keys():
