@@ -16,17 +16,12 @@ class WeatherAPI:
     # calculates and returns average percentage of cloud coverage
     def print_forecast(response):
         cloud_cov_avg = 0
-
         for i in range(22, 24):
             curr = response['forecast']['forecastday'][0]['hour'][i]
-            #print(curr['time'], curr['condition']['text'])
             cloud_cov_avg += curr['cloud']
-
         for i in range(0, 4):
             curr = response['forecast']['forecastday'][1]['hour'][i]
-            #print(curr['time'], curr['condition']['text'])
             cloud_cov_avg += curr['cloud']
-
         return cloud_cov_avg / 6
 
     #get just the weather report
@@ -37,29 +32,19 @@ class WeatherAPI:
         for i in range(0, 4):
             curr = response['forecast']['forecastday'][1]['hour'][i]
             print(curr['time'], curr['condition']['text'])
+
+    # called from main
+    def print_moon_phase(response):
+        moon_phase = response['forecast']['forecastday'][0]['astro']['moon_phase'] 
+        print(moon_phase)
+
+        # left in case of incorporation
+        # moon_illumination = response['forecast']['forecastday'][0]['astro']['moon_illumination']
     
-    #get just the response
-    def get_weather_response(latitude,longitude):
-        my_api_key = os.getenv('API_KEY')
-
-        url="http://api.weatherapi.com/v1//forecast.json"
-
-        location = str(latitude) + "," + str(longitude) 
-
-        response = requests.post(url, {
-                                        'key': my_api_key,
-                                        'q': location,
-                                        'days': '2'
-                                      })
-
-        response = response.json()
-        return response
-        
     # Called by main class
     # Makes call to API forecast data based on location
-    # returns point value to main based on average percentage of cloud coverage 
-
-    def get_weather(latitude, longitude):
+    # returns response
+    def get_weather_response(latitude,longitude):
         my_api_key = os.getenv('API_KEY')
 
         url="http://api.weatherapi.com/v1//forecast.json"
@@ -76,12 +61,10 @@ class WeatherAPI:
 
         if 'error' in response.keys():
             print(response['error']['message'])
-            
-        else:
-            cloud_cov_avg = WeatherAPI.print_forecast(response)
-            return WeatherAPI.point_count(cloud_cov_avg)
+
+        return response
     
 # Testing
-# latitude = 31.772543
-# longitude = -106.460953
-# WeatherAPI.get_weather(latitude, longitude)
+latitude = 31.772543
+longitude = -106.460953
+WeatherAPI.get_weather(latitude, longitude)
