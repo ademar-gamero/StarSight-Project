@@ -52,8 +52,8 @@ while(resp != "q"):
 
         ## score calculation/report
         city.city_calculate(score_obj,local)
-        weather_deduction = WeatherAPI.get_weather(location_latitude,location_longitude)
         weather_response  = WeatherAPI.get_weather_response(location_latitude,location_longitude)
+        weather_deduction = WeatherAPI.get_weather_score(weather_response)
         
         score_obj.lower_score(weather_deduction)
         print(f'Conditions for StarGazing: {score_obj.return_current_score_str()}')
@@ -122,8 +122,8 @@ while(resp != "q"):
 
         ## score calculation/report
         city.city_calculate(score_obj,local)
-        weather_deduction = WeatherAPI.get_weather(location_latitude,location_longitude)
         weather_response  = WeatherAPI.get_weather_response(location_latitude,location_longitude)
+        weather_deduction = WeatherAPI.get_weather_score(weather_response)
         
         score_obj.lower_score(weather_deduction)
         print(f'Conditions for StarGazing: {score_obj.return_current_score_str()}')

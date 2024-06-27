@@ -12,9 +12,9 @@ class WeatherAPI:
         else:
             return 3
 
-    # Prints forecasts for night hours 
+
     # calculates and returns average percentage of cloud coverage
-    def print_forecast(response):
+    def get_weather_score(response):
         cloud_cov_avg = 0
         for i in range(22, 24):
             curr = response['forecast']['forecastday'][0]['hour'][i]
@@ -22,9 +22,10 @@ class WeatherAPI:
         for i in range(0, 4):
             curr = response['forecast']['forecastday'][1]['hour'][i]
             cloud_cov_avg += curr['cloud']
-        return cloud_cov_avg / 6
+        return point_count(cloud_cov_avg / 6)
 
-    #get just the weather report
+
+    # get just the weather report
     def print_weather_report(response):
         for i in range(22, 24):
             curr = response['forecast']['forecastday'][0]['hour'][i]
@@ -32,6 +33,7 @@ class WeatherAPI:
         for i in range(0, 4):
             curr = response['forecast']['forecastday'][1]['hour'][i]
             print(curr['time'], curr['condition']['text'])
+
 
     # called from main
     def print_moon_phase(response):
@@ -41,6 +43,7 @@ class WeatherAPI:
         # left in case of incorporation
         # moon_illumination = response['forecast']['forecastday'][0]['astro']['moon_illumination']
     
+
     # Called by main class
     # Makes call to API forecast data based on location
     # returns response
@@ -59,8 +62,3 @@ class WeatherAPI:
             print(response['error']['message'])
 
         return response
-    
-# Testing
-# latitude = 31.772543
-# longitude = -106.460953
-# WeatherAPI.get_weather(latitude, longitude)

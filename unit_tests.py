@@ -68,3 +68,20 @@ class testScore(unittest.TestCase):
     def test_str_current_score(self):
         self.assertIsInstance(self.sc.return_current_score_str(), str)
 
+class testWeatherAPI(unittest.TestCase):
+    def setUp(self):
+        self.wAPI = WeatherAPI()
+    def test_point_count(self):
+        # testing for 0 points
+        self.assertEqual(self.wAPI.point_count(0), 0)
+        self.assertEqual(self.wAPI.point_count(15), 0)
+        self.assertEqual(self.wAPI.point_count(25), 0)
+        # testing for 1 point 
+        self.assertEqual(self.wAPI.point_count(26), 1)
+        self.assertEqual(self.wAPI.point_count(40), 1)
+        self.assertEqual(self.wAPI.point_count(50), 1)
+        # testing for 3 points
+        self.assertEqual(self.wAPI.point_count(51), 3)
+        self.assertEqual(self.wAPI.point_count(70), 3)
+        self.assertEqual(self.wAPI.point_count(100), 3)
+        
