@@ -17,7 +17,7 @@ class WeatherAPI:
     def print_forecast(response):
         cloud_cov_avg = 0
 
-        for i in range(20, 24):
+        for i in range(22, 24):
             curr = response['forecast']['forecastday'][0]['hour'][i]
             #print(curr['time'], curr['condition']['text'])
             cloud_cov_avg += curr['cloud']
@@ -27,11 +27,11 @@ class WeatherAPI:
             #print(curr['time'], curr['condition']['text'])
             cloud_cov_avg += curr['cloud']
 
-        return cloud_cov_avg / 8
+        return cloud_cov_avg / 6
 
     #get just the weather report
     def print_weather_report(response):
-        for i in range(20, 24):
+        for i in range(22, 24):
             curr = response['forecast']['forecastday'][0]['hour'][i]
             print(curr['time'], curr['condition']['text'])
         for i in range(0, 4):

@@ -26,7 +26,7 @@ class DB():
             print("Your Saved Locations: ")
             print("----------------------")
             for row in rows:
-                print(f'ID: {row[0]} NAME: {row[1]} LATITUDE: {row[3]} LONGITUDE: {row[2]}')
+                print(f'ID: {row[0]} || NAME: {row[1]} || LATITUDE: {row[3]} || LONGITUDE: {row[2]}')
                 print("--------------------------------------------------------------------")
 
     def add_location(self,location):

@@ -14,10 +14,10 @@ while(resp != "q"):
     print("***************************************")
     print("Hello!, Welcome to the star sight app!")
     #Description
-    print("This application lets you see the condition for viewing stars and visible constellations given a location(lattitude/longitude)")
+    print("This application lets you see the condition for viewing stars and lunar phase of given a location(lattitude/longitude)")
     print("You can also save locations you lookup to come back to them in the future")
     print("***************************************************************************************")
-    print("IMPORTANT: Calculations are based on these assumptions: Time 20:00-3:00 | Current Date")
+    print("IMPORTANT: Calculations are based on these assumptions: Time 22:00-3:00 | Current Date")
     print("***************************************************************************************")
     #Menu
     print("                                        Menu")
@@ -125,6 +125,9 @@ while(resp != "q"):
         print("---------------")
         print(f'Light Pollution levels: {score_obj.return_current_light_pollution_str()}')
         print("---------------")
+        print("Lunar Phase:")
+        print("---------------")
+
         print("Weather Report:")
         print("---------------")
         WeatherAPI.print_weather_report(weather_response)
