@@ -61,6 +61,6 @@ class WeatherAPI:
         return response
     
 # Testing
-latitude = 31.772543
-longitude = -106.460953
-WeatherAPI.get_weather(latitude, longitude)
+# latitude = 31.772543
+# longitude = -106.460953
+# WeatherAPI.get_weather(latitude, longitude)
