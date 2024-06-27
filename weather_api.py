@@ -6,10 +6,8 @@ class WeatherAPI:
     def point_count(avg):
         if avg >= 0 and avg <= 25:
             return 0
-        
         elif avg > 25 and avg <= 50:
             return 1
-        
         else:
             return 3
 
