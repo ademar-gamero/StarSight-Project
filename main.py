@@ -15,8 +15,12 @@ while(resp != "q"):
     #Description
     print("This application lets you see the condition for viewing stars and visible constellations given a location(lattitude/longitude)")
     print("You can also save locations you lookup to come back to them in the future")
-    print("Calculations based on these assumptions: Time 22:00-3:00 | Current Date")
+    print("***************************************************************************************")
+    print("IMPORTANT: Calculations are based on these assumptions: Time 20:00-3:00 | Current Date")
+    print("***************************************************************************************")
     #Menu
+    print("Menu")
+    print("*************************")
     print("Lookup a new location(n)")
     #I think we should add this 
     #print("Lookup nearby locations for star gazing(c)")
@@ -46,10 +50,16 @@ while(resp != "q"):
         ## score calculation/report
         city.city_calculate(score_obj,local)
         weather_deduction = WeatherAPI.get_weather(location_latitude,location_longitude)
+        weather_response  = WeatherAPI.get_weather_response(location_latitude,location_longitude)
+        
         score_obj.lower_score(weather_deduction)
         print(f'Conditions for StarGazing: {score_obj.return_current_score_str()}')
-
-
+        print("---------------")
+        print(f'Light Pollution levels: {score_obj.return_current_light_pollution_str()}')
+        print("---------------")
+        print("Weather Report:")
+        print("---------------")
+        WeatherAPI.print_weather_report(weather_response)
 
         save_or_no = None
         while save_or_no != "y" and save_or_no != "n":
@@ -69,45 +79,66 @@ while(resp != "q"):
                 print("*************************************************************")
                 continue
             elif cont_or_stop == "n":
-                print("Thank you for using the StarSight application")
+                print("Thank You for using the StarSight Application. Live Long and Prosper...")
                 resp = "q"
             else:
                 print("Please enter either (y) or (n)")
             
-
     elif resp == "o":
-        print = ("Your saved locations: ")
         db.print_rows()
         rows = db.saved_locations()
         flag2 = False
         while flag2 == False: 
             try:
-                resp_saved = int(input("If you would like to select a saved location to view again enter the associated id with it otherwise enter 0 to return: "))#catch exception
+                resp_saved = int(input("Enter ID to select saved location or Enter (0) to return: "))#catch exception
             except ValueError:
                 print("Please enter a valid id ")
                 continue
             flag2 = True
         if resp_saved == 0:
-            pass #change to continue once full loop is implemented
+            resp = None
+            print("*************************************************************")
+            print("*************************************************************")
+            continue
         else:
             entry = resp_saved - 1
             if entry < 0 or entry >= len(rows):
                 print("entry not found or not in bounds")
             else:
-                location_latitude = rows[entry][2]
-                location_longitude = rows[entry][3] 
+                location_latitude = rows[entry][3]
+                location_longitude = rows[entry][2] 
                 flag = True
-                
+
         city = CityAPI(location_latitude,location_longitude)
         local = city.get_nearby_cities()
 
         ## score calculation/report
         city.city_calculate(score_obj,local)
         weather_deduction = WeatherAPI.get_weather(location_latitude,location_longitude)
+        weather_response  = WeatherAPI.get_weather_response(location_latitude,location_longitude)
+        
         score_obj.lower_score(weather_deduction)
         print(f'Conditions for StarGazing: {score_obj.return_current_score_str()}')
-        #gather data on location
-        #score report 
+        print("---------------")
+        print(f'Light Pollution levels: {score_obj.return_current_light_pollution_str()}')
+        print("---------------")
+        print("Weather Report:")
+        print("---------------")
+        WeatherAPI.print_weather_report(weather_response)
+
+        #would you like to continue or not   
+        cont_or_stop = None
+        while cont_or_stop != "y" and cont_or_stop != "n":
+            cont_or_stop = input("Would you like to continue using the application(y)(n)?")
+            if cont_or_stop == "y":
+                print("*************************************************************")
+                print("*************************************************************")
+                continue
+            elif cont_or_stop == "n":
+                print("Thank You for using the StarSight Application. Live Long and Prosper...")
+                resp = "q"
+            else:
+                print("Please enter either (y) or (n)")     
     elif resp == "q":
         print("Thank You for using the StarSight Application. Live Long and Prosper...")
         sys.exit()

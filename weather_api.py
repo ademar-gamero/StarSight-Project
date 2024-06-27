@@ -17,16 +17,41 @@ class WeatherAPI:
 
         for i in range(20, 24):
             curr = response['forecast']['forecastday'][0]['hour'][i]
-            print(curr['time'], curr['condition']['text'])
+            #print(curr['time'], curr['condition']['text'])
             cloud_cov_avg += curr['cloud']
 
         for i in range(0, 4):
             curr = response['forecast']['forecastday'][1]['hour'][i]
-            print(curr['time'], curr['condition']['text'])
+            #print(curr['time'], curr['condition']['text'])
             cloud_cov_avg += curr['cloud']
 
         return cloud_cov_avg / 8
-        
+
+    #get just the weather report
+    def print_weather_report(response):
+        for i in range(20, 24):
+            curr = response['forecast']['forecastday'][0]['hour'][i]
+            print(curr['time'], curr['condition']['text'])
+        for i in range(0, 4):
+            curr = response['forecast']['forecastday'][1]['hour'][i]
+            print(curr['time'], curr['condition']['text'])
+    
+    #get just the response
+    def get_weather_response(latitude,longitude):
+        my_api_key = os.getenv('API_KEY')
+
+        url="http://api.weatherapi.com/v1//forecast.json"
+
+        location = str(latitude) + "," + str(longitude) 
+
+        response = requests.post(url, {
+                                        'key': my_api_key,
+                                        'q': location,
+                                        'days': '2'
+                                      })
+
+        response = response.json()
+        return response
 
     def get_weather(latitude, longitude):
         my_api_key = os.getenv('API_KEY')
