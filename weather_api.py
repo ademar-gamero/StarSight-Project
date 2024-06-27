@@ -3,6 +3,7 @@ import json
 import os
 
 class WeatherAPI:
+    # Method which returns points based on the average cloud coverage percentage
     def point_count(avg):
         if avg >= 0 and avg <= 25:
             return 0
@@ -11,7 +12,8 @@ class WeatherAPI:
         else:
             return 3
 
-
+    # Prints forecasts for night hours 
+    # calculates and returns average percentage of cloud coverage
     def print_forecast(response):
         cloud_cov_avg = 0
 
@@ -27,7 +29,9 @@ class WeatherAPI:
 
         return cloud_cov_avg / 8
         
-
+    # Called by main class
+    # Makes call to API forecast data based on location
+    # returns point value to main based on average percentage of cloud coverage 
     def get_weather(latitude, longitude):
         my_api_key = os.getenv('API_KEY')
 
@@ -43,9 +47,12 @@ class WeatherAPI:
 
         response = response.json()
 
-        cloud_cov_avg = WeatherAPI.print_forecast(response)
-
-        return WeatherAPI.point_count(cloud_cov_avg)
+        if 'error' in response.keys():
+            print(response['error']['message'])
+            
+        else:
+            cloud_cov_avg = WeatherAPI.print_forecast(response)
+            return WeatherAPI.point_count(cloud_cov_avg)
     
 # Testing
 # latitude = 31.772543
