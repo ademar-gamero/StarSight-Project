@@ -67,3 +67,4 @@ class testScore(unittest.TestCase):
         self.assertIsInstance(self.sc.return_current_score(), int)
     def test_str_current_score(self):
         self.assertIsInstance(self.sc.return_current_score_str(), str)
+
