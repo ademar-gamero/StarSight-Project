@@ -41,7 +41,7 @@ class DB():
         self.cur.execute(query,(lon,lat))
         result = self.cur.fetchone()[0]
         print(result)
-        if result == 0:
+        if result > 0:
             print("This location is already saved in the database")
         else:
             sql = '''INSERT INTO saved_locations(name,longitude,latitude)
@@ -140,11 +140,11 @@ class score:
         self.score = 5
         self.light_pollution = 5
         self.score_card = {0:"NOT OPTIMAL-Stars will not be visible",
-            1:"NOT OPTIMAL-Stars will not be visible",
-            2:"NOT OPTIMAL-Stars will not be visible",
-            3:"SUB OPTIMAL-Stars may be visible",
-            4:"SUB OPTIMAL-Stars may be visible",
-            5:"OPTIMAL-Stars will be visible"}
+            1:"NOT OPTIMAL - Stars will not be visible",
+            2:"NOT OPTIMAL - Stars will not be visible",
+            3:"SUB OPTIMAL - Stars may be visible",
+            4:"SUB OPTIMAL - Stars may be visible",
+            5:"OPTIMAL - Stars will be visible"}
         self.light_pollution_card = {0:"HIGH LIGHT POLLUTION - large cities within 20 miles",
             1:"HIGH LIGHT POLLUTION - large cities within 20 miles",
             2:"HIGH LIGHT POLLUTION - large cities within 20 miles",

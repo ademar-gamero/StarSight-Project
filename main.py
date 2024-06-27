@@ -43,7 +43,7 @@ while(resp != "q"):
                 print("Please enter a valid longitude")
                 continue
             flag1 = True
-        
+        print("-----------------------------------------")
         city = CityAPI(location_latitude,location_longitude)
         local = city.get_nearby_cities()
 
@@ -60,6 +60,7 @@ while(resp != "q"):
         print("Weather Report:")
         print("---------------")
         WeatherAPI.print_weather_report(weather_response)
+        print("---------------")
 
         save_or_no = None
         while save_or_no != "y" and save_or_no != "n":
@@ -95,6 +96,7 @@ while(resp != "q"):
                 print("Please enter a valid id ")
                 continue
             flag2 = True
+        print("--------------------------------------------------------------------")
         if resp_saved == 0:
             resp = None
             print("*************************************************************")
