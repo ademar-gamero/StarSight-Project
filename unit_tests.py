@@ -1,6 +1,6 @@
 import unittest
 import sqlite3
-from testing_code import DB, score
+from distance import DB, score
 from unittest.mock import patch
 
 class testDB(unittest.TestCase):
@@ -13,8 +13,8 @@ class testDB(unittest.TestCase):
         # Iterate through the tables and drop each one
         for table in tables:
             table_name = table[0]
-        if table_name != 'sqlite_sequence':  # Skip the sqlite_sequence table
-            cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
+            if table_name != 'sqlite_sequence':  # Skip the sqlite_sequence table
+                cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
         # Commit the changes and close the connection
         conn.commit()
         self.db = DB("ntest.db") #creates the Database by using the class
@@ -27,15 +27,15 @@ class testDB(unittest.TestCase):
     def test_saved_locations(self):
         self.assertEqual(self.db.saved_locations(), [])
     def test_add_locations(self):
-        a = 45.724115
-        b = -108.230242
+        a = 45.724115 #latitude
+        b = -108.230242 #longitude
         location = ('location', a, b)
         self.db.add_location(location)
         row = self.db.saved_locations()
         self.assertEqual(len(row), 1)
         self.assertEqual(row[0][0], 'location')
-        self.assertEqual(row[0][1], a)
-        self.assertEqual(row[0][2], b)
+        self.assertEqual(float(row[0][2]), a)
+        self.assertEqual(float(row[0][1]), b)
     # def test_print_db(self):
     #     row = self.db.saved_locations()
         # if(len(row) == 0):

@@ -114,7 +114,8 @@ while(resp != "q"):
             continue
         else:
             location_latitude = rows[entry][3]
-            location_longitude = rows[entry][2] 
+            location_longitude = rows[entry][2]
+ 
 
         city = CityAPI(location_latitude,location_longitude)
         local = city.get_nearby_cities()

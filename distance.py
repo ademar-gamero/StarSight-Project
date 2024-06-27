@@ -33,14 +33,11 @@ class DB():
         name = location[0]
         lat = location[1]
         lon = location[2]
-        print(lat)
-        print(lon)
         #checking if location is already saved
         query = '''SELECT COUNT(*) AS match_count FROM saved_locations 
               WHERE longitude = ? AND latitude = ? '''
         self.cur.execute(query,(lon,lat))
         result = self.cur.fetchone()[0]
-        print(result)
         if result > 0:
             print("This location is already saved in the database")
         else:
