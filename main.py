@@ -11,6 +11,7 @@ location_latitude = None
 location_longitude = None
 resp = None
 while(resp != "q"):
+    print("***************************************")
     print("Hello!, Welcome to the star sight app!")
     #Description
     print("This application lets you see the condition for viewing stars and visible constellations given a location(lattitude/longitude)")
@@ -19,13 +20,13 @@ while(resp != "q"):
     print("IMPORTANT: Calculations are based on these assumptions: Time 20:00-3:00 | Current Date")
     print("***************************************************************************************")
     #Menu
-    print("Menu")
-    print("*************************")
-    print("Lookup a new location(n)")
+    print("                                        Menu")
+    print("***************************************************************************************")
+    print("                             Lookup a new location(n)")
     #I think we should add this 
     #print("Lookup nearby locations for star gazing(c)")
-    print("Look at saved/select locations(o)")
-    print("Quit(q)")
+    print("                         Look at saved/select locations(o)")
+    print("                                       Quit(q)")
     #Look up New location
     resp = input("Enter your response: ")
     if resp == "n":
