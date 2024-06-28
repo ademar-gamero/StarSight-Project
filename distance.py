@@ -36,19 +36,20 @@ class DB():
         # checking if location is already saved
         query = '''SELECT COUNT(*) AS match_count FROM saved_locations 
               WHERE longitude = ? AND latitude = ? '''
-        self.cur.execute(query,(lon,lat))
+        self.cur.execute(query, (lon, lat))
         result = self.cur.fetchone()[0]
         if result > 0:
             print("This location is already saved in the database")
         else:
             sql = '''INSERT INTO saved_locations(name,longitude,latitude)
                     VALUES(?,?,?)'''
-            new_location = (name,lon,lat)
-            self.cur.execute(sql,new_location)
+            new_location = (name, lon, lat)
+            self.cur.execute(sql, new_location)
             self.connection.commit()
             return self.cur.lastrowid
         return -1
-            
+
+
 class CityAPI():
     def __init__(self, latitude, longitude):
         self.location_latitude = latitude 

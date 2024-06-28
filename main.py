@@ -2,11 +2,11 @@ from distance import DB,CityAPI,score
 from weather_api import WeatherAPI
 import sys
 
-#db intialization
+# db intialization
 db = DB("star.db")
-#score intialization
+# score intialization
 
-#location intialization
+# location intialization
 location_latitude = None
 location_longitude = None
 resp = None
@@ -97,7 +97,7 @@ while resp != "q":
         flag2 = False
         while flag2 == False: 
             try:
-                resp_saved = int(input("Enter ID to select saved location or Enter (0) to return: "))#catch exception
+                resp_saved = int(input("Enter ID to select saved location or Enter (0) to return: "))  #catch exception
             except ValueError:
                 print("Please enter a valid id ")
                 continue
@@ -119,11 +119,10 @@ while resp != "q":
             location_latitude = rows[entry][3]
             location_longitude = rows[entry][2]
  
-
         city = CityAPI(location_latitude,location_longitude)
         local = city.get_nearby_cities()
 
-        ## score calculation/report
+        # score calculation/report
         city.city_calculate(score_obj,local)
         weather_response = WeatherAPI.get_weather_response(location_latitude,location_longitude)
         weather_deduction = WeatherAPI.get_weather_score(weather_response)
@@ -140,7 +139,7 @@ while resp != "q":
         print("---------------")
         WeatherAPI.print_weather_report(weather_response)
         print("---------------")
-        #would you like to continue or not   
+        # would you like to continue or not   
         cont_or_stop = None
         while cont_or_stop != "y" and cont_or_stop != "n":
             cont_or_stop = input("Would you like to continue using the application(y)(n)?")
@@ -161,12 +160,3 @@ while resp != "q":
         print("please try again")
         print("*************************************************************")
         print("*************************************************************")
-
-
-
-#pseudo code
-#while loop
-# nested while loops to make sure input is accurate
-# if the location is not valid, can be float value but invalid location
-
-
