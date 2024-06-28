@@ -7,7 +7,7 @@ import base64
 applicationId=os.getenv('CLIENT_ID')
 applicationSecret=os.getenv('CLIENT_SECRET')
 
-url ='https://api.astronomyapi.com/api/v2/bodies/positions' 
+url ='https://api.astronomyapi.com/api/v2/bodies/positions'
 
 # added login directly and it worked
 # needs testing as environmental var

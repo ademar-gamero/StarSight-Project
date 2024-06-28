@@ -5,18 +5,19 @@ import sys
 #db intialization
 db = DB("star.db")
 #score intialization
-score_obj = score()
+
 #location intialization
 location_latitude = None
 location_longitude = None
 resp = None
-while(resp != "q"):
+while(resp != "q" ):
+    score_obj = score()
     location_latitude = None
     location_longitude = None
     print("***************************************")
     print("Hello!, Welcome to the star sight app!")
     #Description
-    print("This application lets you see the condition for viewing stars and lunar phase of given a location(lattitude/longitude)")
+    print("This application lets you see the condition for viewing stars and lunar phases of a given location(lattitude/longitude)")
     print("You can also save locations you lookup to come back to them in the future")
     print("***************************************************************************************")
     print("IMPORTANT: Calculations are based on these assumptions: Time 22:00-3:00 | Current Date")
@@ -34,7 +35,7 @@ while(resp != "q"):
     if resp == "n":
         flag1 = False
         while flag1 == False:
-            print("Enter a valid latitude and longitude value: ") #need to add range check in united states for long and latitude 
+            print("Enter a valid latitude and longitude value: ")  #need to add range check in united states for long and latitude 
             try:
                 location_latitude = float(input("Enter a latitude: "))
             except ValueError:
@@ -50,9 +51,8 @@ while(resp != "q"):
         city = CityAPI(location_latitude,location_longitude)
         local = city.get_nearby_cities()
 
-        ## score calculation/report
-        city.city_calculate(score_obj,local)
-        weather_response  = WeatherAPI.get_weather_response(location_latitude,location_longitude)
+        city.city_calculate(score_obj,local)  ## score calculation/report
+        weather_response = WeatherAPI.get_weather_response(location_latitude,location_longitude)
         weather_deduction = WeatherAPI.get_weather_score(weather_response)
         
         score_obj.lower_score(weather_deduction)

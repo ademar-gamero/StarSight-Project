@@ -4,12 +4,12 @@ import sqlite3
 import os
 import sys
 
-#add location
+
 class DB():
-    def __init__(self,db_name):
+    def __init__(self, db_name):
         self.connection = sqlite3.connect(db_name)
         self.cur = self.connection.cursor()
-        
+
     def saved_locations(self):
         self.cur.execute("SELECT * FROM saved_locations")
         rows = self.cur.fetchall()
@@ -27,7 +27,7 @@ class DB():
             print("----------------------")
             for row in rows:
                 print(f'ID: {row[0]} || NAME: {row[1]} || LATITUDE: {row[3]} || LONGITUDE: {row[2]}')
-                print("--------------------------------------------------------------------")
+                print("---------------------------------------------------------------------------------------------------------")
 
     def add_location(self,location):
         name = location[0]
@@ -86,50 +86,13 @@ class CityAPI():
                     if 50000 <= pop <= 100000:
                         score_obj.lower_score(1)
                         score_obj.light_pollution -= 1
-                        print(score_obj.light_pollution)
+                        if score_obj.light_pollution < 0:
+                            score_obj.light_pollution = 0
                     elif pop >= 100000:
                         score_obj.lower_score(3)
                         score_obj.light_pollution -= 3
-
-    
-
-#db connection
-#connection = sqlite3.connect("star.db")
-#cur = connection.cursor()
-#cur.execute("SELECT * FROM saved_locations")
-#rows = cur.fetchall()
-
-#var = DB("star.db")
-#var.print_rows()
-
-
-#Asking for longitude and lattitude
-'''
-response = int(input("Enter 0 to lookup a new location or enter a number matching a location to look up a saved location: "))    
-if response == 0:
-    while not isinstance(location_latitude,float) or not isinstance(location_longitude,float):
-        location_latitude = input("Enter a latitude: ")
-        if location_latitude == "\q":
-            print("cya l8ter alligator")
-            sys.exit()
-        location_longitude = input("Enter a longitude: ")
-        if location_longitude == "\q":
-            print("cya l8ter alligator")
-            sys.exit()
-        if not isinstance(location_latitude,float):
-            print("please enter a valid latitude decimal value")
-        if not isinstance(location_longitude,float):
-            print("please enter a valid longitude decimal value")
-else:
-    entry = response - 1
-    if 0 > entry >= len(rows):
-        print("entry not found")
-    else:
-        location_latitude = rows[entry][2]
-        location_longitude = rows[entry][3]
-print(location_latitude)
-print(location_longitude)
-'''
+                        if score_obj.light_pollution < 0:
+                            score_obj.light_pollution = 0
 
 #score calculation/optimal for star gazing or not?            
 class score:
@@ -160,13 +123,4 @@ class score:
         return self.score_card[self.score]
     def return_current_light_pollution_str(self):
         return self.light_pollution_card[self.light_pollution]
-
-        
-#resp = input("Would you like to save the location(y)(n)?")
-#if resp == "y":
-    #name_given = input("What would you like to name this location?")
-    #location = (name_given,location_longitude,location_latitudes)
-    #add_location(connection,location)
-#elif resp == "n":
-    #resp1 = input("would you like to try looking up another location(y)(n)?")
 
