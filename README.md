@@ -1,5 +1,5 @@
 # 🌟 StarSight 🌌
-StarSight is an innovative app designed to enhance stargazing experiences. It provides real-time information on star visibility based on user location and light pollution data. The app aims to make stargazing accessible and enjoyable by offering accurate and timely information on the best times and locations for viewing stars.
+StarSight is an innovative app designed to enhance stargazing experiences. It provides real-time information on star visibility based on a given location and light pollution data. The app aims to make stargazing accessible and enjoyable by offering accurate and timely information on the best times and locations for viewing stars.
 
 ## 📋 Table of Contents
 
