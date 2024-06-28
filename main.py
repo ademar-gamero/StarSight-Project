@@ -60,6 +60,9 @@ while(resp != "q"):
         print("---------------")
         print(f'Light Pollution levels: {score_obj.return_current_light_pollution_str()}')
         print("---------------")
+        print("Lunar Phase: ",end="")
+        WeatherAPI.print_moon_phase(weather_response)
+        print("---------------")
         print("Weather Report:")
         print("---------------")
         WeatherAPI.print_weather_report(weather_response)
@@ -130,13 +133,13 @@ while(resp != "q"):
         print("---------------")
         print(f'Light Pollution levels: {score_obj.return_current_light_pollution_str()}')
         print("---------------")
-        print("Lunar Phase:")
+        print("Lunar Phase: ",end="")
+        WeatherAPI.print_moon_phase(weather_response)
         print("---------------")
-
         print("Weather Report:")
         print("---------------")
         WeatherAPI.print_weather_report(weather_response)
-
+        print("---------------")
         #would you like to continue or not   
         cont_or_stop = None
         while cont_or_stop != "y" and cont_or_stop != "n":

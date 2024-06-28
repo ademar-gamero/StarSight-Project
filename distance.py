@@ -145,9 +145,9 @@ class score:
         self.light_pollution_card = {0:"HIGH LIGHT POLLUTION - large cities within 20 miles",
             1:"HIGH LIGHT POLLUTION - large cities within 20 miles",
             2:"HIGH LIGHT POLLUTION - large cities within 20 miles",
-            3:"MEDIUM LIGHT POLLUTION - small to medium towns within 20 miles",
-            4:"MEDIUM LIGHT POLLUTION - small to medium towns within 20 miles",
-            5:"NO LIGHT POLLUTION"}
+            3:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
+            4:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
+            5:"NO LIGHT POLLUTION - no cities within 20 miles"}
     def lower_score(self,val):
         self.score = self.score - val
         if self.score < 0:

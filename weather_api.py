@@ -22,7 +22,9 @@ class WeatherAPI:
         for i in range(0, 4):
             curr = response['forecast']['forecastday'][1]['hour'][i]
             cloud_cov_avg += curr['cloud']
-        return point_count(cloud_cov_avg / 6)
+        new_cloud_avg = cloud_cov_avg / 6
+        val = WeatherAPI.point_count(new_cloud_avg)
+        return val
 
 
     # get just the weather report
