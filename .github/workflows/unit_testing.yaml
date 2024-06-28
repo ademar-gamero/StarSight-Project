@@ -11,9 +11,14 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.11.3
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install requests
 
       - name: Install tools
         run: python -m pip install --upgrade pip pytest
             
       - name: Test with unittest
         run: python3 -m unittest unit_tests.py
+        
