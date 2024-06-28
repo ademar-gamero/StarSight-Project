@@ -1,6 +1,7 @@
 import unittest
 import sqlite3
 from distance import DB, score
+import requests
 from unittest.mock import patch
 
 class testDB(unittest.TestCase):
