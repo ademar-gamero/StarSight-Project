@@ -10,27 +10,27 @@ db = DB("star.db")
 location_latitude = None
 location_longitude = None
 resp = None
-while(resp != "q" ):
+while resp != "q":
     score_obj = score()
     location_latitude = None
     location_longitude = None
     print("***************************************")
     print("Hello!, Welcome to the star sight app!")
-    #Description
+    # Description
     print("This application lets you see the condition for viewing stars and lunar phases of a given location(lattitude/longitude)")
     print("You can also save locations you lookup to come back to them in the future")
     print("***************************************************************************************")
     print("IMPORTANT: Calculations are based on these assumptions: Time 22:00-3:00 | Current Date")
     print("***************************************************************************************")
-    #Menu
+    # Menu
     print("                                        Menu")
     print("***************************************************************************************")
     print("                             Lookup a new location(n)")
-    #I think we should add this 
-    #print("Lookup nearby locations for star gazing(c)")
+    # I think we should add this 
+    # print("Lookup nearby locations for star gazing(c)")
     print("                         Look at saved/select locations(o)")
     print("                                       Quit(q)")
-    #Look up New location
+    # Look up New location
     resp = input("Enter your response: ")
     if resp == "n":
         flag1 = False
@@ -125,7 +125,7 @@ while(resp != "q" ):
 
         ## score calculation/report
         city.city_calculate(score_obj,local)
-        weather_response  = WeatherAPI.get_weather_response(location_latitude,location_longitude)
+        weather_response = WeatherAPI.get_weather_response(location_latitude,location_longitude)
         weather_deduction = WeatherAPI.get_weather_score(weather_response)
         
         score_obj.lower_score(weather_deduction)
