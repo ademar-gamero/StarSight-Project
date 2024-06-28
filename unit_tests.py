@@ -1,6 +1,7 @@
 import unittest
 import sqlite3
 from distance import DB, score
+from weather_api import WeatherAPI
 import requests
 from unittest.mock import patch
 
