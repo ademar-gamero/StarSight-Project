@@ -1,4 +1,5 @@
-from flask import Flask
+import git
+from flask import Flask, render_template, url_for, flash, redirect, request
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
@@ -34,6 +35,16 @@ with app.app_context():
 @app.route("/")
 def main_menu():
     return "<h1> StarSight Application </h1>"
+
+@app.route("/update_server", methods=['POST'])
+def webhook():
+    if request.method == 'POST':
+        repo = git.Repo('/home/StarSight/StarSight-Project')
+        origin = repo.remotes.origin
+        origin.pull()
+        return 'Updated PythonAnywhere Succesfull', 200 
+    else:
+        return 'Wrong event type', 400
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
