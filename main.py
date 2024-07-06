@@ -1,5 +1,35 @@
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
+
+db = SQLAlchemy(app)
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  
+    username = db.Column(db.String(20), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(60), nullable=False)
+    saved_locations = db.relationship('Location',backref='user')
+    
+    def __repr__(self):
+        return f"User('{self.username}', '{self.email}')"
+
+class Location(db.Model):
+    id = db.Column(db.Integer, primary_key=True)  
+    state = db.Column(db.String(20), unique=False, nullable=False)
+    county = db.Column(db.String(20), unique=False, nullable=False)
+    latitude = db.Column(db.Numeric(4,7), unique=False,nullable=False)
+    longitude = db.Column(db.Numeric(4,7), unique=False,nullable=False)
+    elevation = db.Column(db.Numeric(6,1), unique=False, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    
+    def __repr__(self):
+        return f"Location('{self.id}', '{self.user_id.username}','{self.state}')"
+
+with app.app_context():
+    db.create_all()
 
 @app.route("/")
 def main_menu():
