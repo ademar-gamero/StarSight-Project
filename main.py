@@ -34,7 +34,7 @@ with app.app_context():
 
 @app.route("/")
 def main_menu():
-    return "<h1> StarSight Application </h1>"
+    return "<h1> StarSight Application version 1.0 </h1>"
 
 @app.route("/update_server", methods=['POST'])
 def webhook():
