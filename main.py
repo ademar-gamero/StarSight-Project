@@ -42,7 +42,7 @@ def webhook():
         repo = git.Repo('/home/StarSight/StarSight-Project')
         origin = repo.remotes.origin
         origin.pull()
-        return 'Updated PythonAnywhere Succesfull', 200 
+        return 'Updated PythonAnywhere successfully', 200
     else:
         return 'Wrong event type', 400
 
