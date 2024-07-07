@@ -22,3 +22,6 @@ jobs:
       - name: Test with unittest
         run: python3 -m unittest unit_tests.py
         
+      - name: Test webpages
+        run: python3 tests/test_basic.py
+        
