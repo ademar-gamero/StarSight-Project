@@ -2,8 +2,8 @@ import requests
 import json
 import sqlite3
 import os
-import sys
-
+import geocoder
+from math import asin, atan2, cos, degrees, radians, sin
 
 class DB():
     def __init__(self, db_name):
@@ -85,6 +85,44 @@ class CityAPI():
                         score_obj.light_pollution -= 3
                         if score_obj.light_pollution < 0:
                             score_obj.light_pollution = 0
+
+class curr_user():
+    def __init__(self):
+        self.loc = geocoder.ip('me')    
+        self.nearby_locs = [[]]
+
+    def print_current_coords(self):
+        print(self.loc.latlng)
+    
+    def current_lat(self):
+        print(self.loc.latlng[0])
+        return self.loc.latlng[0]
+
+    def current_lon(self):
+        print(self.loc.latlng[1])
+        return self.loc.latlng[1]
+
+    def get_nearby_locs(self):
+        return self.nearby_locs
+
+    #method that gets new locations based on bearing/dist
+    def get_loc_given_dist_and_bear(self, lat1, lon1, dist, bearing, R=6371):
+        #convert inputs to radians
+        rad_lat1 = radians(lat1)
+        rad_lon1 = radians(lon1)
+        rad_bearing = radians(bearing)
+        
+        #calculate new points 
+        rad_lat2 = asin(sin(rad_lat1)*cos(dist/R) + cos(rad_lat1) * sin(dist/R) * cos(rad_bearing))
+        rad_lon2 = rad_lon1 + atan2(sin(rad_bearing) * sin(dist/R) * cos(rad_lat1),
+                                cos(dist/R) - sin(rad_lat1) * sin(rad_lat2))
+
+        #convert back to degrees from radians
+        return (degrees(rad_lat2),degrees(rad_lon2))
+
+    #recursive method that builds out the graph of nearby locations
+    def calculate_nearby_locs(self,search_radius=20.0):
+        pass
 
 # score calculation/optimal for star gazing or not?            
 class score:

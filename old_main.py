@@ -1,4 +1,4 @@
-from distance import DB,CityAPI,score 
+from distance import DB,CityAPI,score,curr_user 
 from weather_api import WeatherAPI
 import sys
 
@@ -11,6 +11,7 @@ location_latitude = None
 location_longitude = None
 resp = None
 while resp != "q":
+    cur_usr = curr_user()
     score_obj = score()
     location_latitude = None
     location_longitude = None
@@ -30,6 +31,10 @@ while resp != "q":
     # print("Lookup nearby locations for star gazing(c)")
     print("                         Look at saved/select locations(o)")
     print("                                       Quit(q)")
+    print("Your Current Location: ")
+    cur_usr.print_current_coords()
+    cur_usr.current_lat()
+    cur_usr.current_lon()
     # Look up New location
     resp = input("Enter your response: ")
     if resp == "n":
