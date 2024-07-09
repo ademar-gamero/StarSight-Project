@@ -46,5 +46,12 @@ def webhook():
     else:
         return 'Wrong event type', 400
 
+@app.route('/saved_locations')
+def saved_locations_page():
+    #may return multiple users
+    #get user id first, then saved locations
+    locations = db.saved_locations()
+    return render_template('saved_locations.html', locations=locations)
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
