@@ -35,6 +35,13 @@ while resp != "q":
     cur_usr.print_current_coords()
     cur_usr.current_lat()
     cur_usr.current_lon()
+    cur_usr.get_loc_given_dist_and_bear(43.1777903, -88.0052169, 4.82803, 270)
+
+    cur_usr.calculate_nearby_locs(cur_usr.user_nearby_locs,cur_usr.coords)
+    print(cur_usr.user_nearby_locs)
+    print(len(cur_usr.user_nearby_locs))
+    
+
     # Look up New location
     resp = input("Enter your response: ")
     if resp == "n":

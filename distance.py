@@ -3,6 +3,7 @@ import json
 import sqlite3
 import os
 import geocoder
+import haversine as hs
 from math import asin, atan2, cos, degrees, radians, sin
 
 class DB():
@@ -89,7 +90,9 @@ class CityAPI():
 class curr_user():
     def __init__(self):
         self.loc = geocoder.ip('me')    
-        self.nearby_locs = [[]]
+        self.user_nearby_locs = []
+        self.coords = self.loc.latlng
+        self.guide = {8.04672:1.60934,16.0934:3.21869,32.1869:6.43738}
 
     def print_current_coords(self):
         print(self.loc.latlng)
@@ -102,8 +105,8 @@ class curr_user():
         print(self.loc.latlng[1])
         return self.loc.latlng[1]
 
-    def get_nearby_locs(self):
-        return self.nearby_locs
+    def print_user_nearby_locs(self):
+        print(self.user_nearby_locs)
 
     #method that gets new locations based on bearing/dist
     def get_loc_given_dist_and_bear(self, lat1, lon1, dist, bearing, R=6371):
@@ -118,11 +121,69 @@ class curr_user():
                                 cos(dist/R) - sin(rad_lat1) * sin(rad_lat2))
 
         #convert back to degrees from radians
-        return (degrees(rad_lat2),degrees(rad_lon2))
+        lat2 = degrees(rad_lat2)
+        lon2 = degrees(rad_lon2)
+        coords = (lat2,lon2)
+        return coords
 
     #recursive method that builds out the graph of nearby locations
-    def calculate_nearby_locs(self,search_radius=20.0):
-        pass
+    '''
+    def calculate_nearby_locs(self,nearby_locs,origin_loc, prev_loc, current_loc,search_radius=32.1869):
+        if hs.haversine(origin_loc,current_loc) > search_radius:
+            return None
+        else:
+            nearby_locs.append(current_loc)
+        prev_loc = current_loc
+        self.calculate_nearby_locs(nearby_locs,origin_loc,prev_loc,self.get_loc_given_dist_and_bear(prev_loc[0],prev_loc[1],1.60934,0),search_radius)#north
+        self.calculate_nearby_locs(nearby_locs,origin_loc,prev_loc,self.get_loc_given_dist_and_bear(prev_loc[0],prev_loc[1],1.60934,90),search_radius)#east
+        self.calculate_nearby_locs(nearby_locs,origin_loc,prev_loc,self.get_loc_given_dist_and_bear(prev_loc[0],prev_loc[1],1.60934,180),search_radius)#south
+        self.calculate_nearby_locs(nearby_locs,origin_loc,prev_loc,self.get_loc_given_dist_and_bear(prev_loc[0],prev_loc[1],1.60934,270),search_radius)#west
+        return None
+    '''
+    '''
+    def calculate_nearby_locs(self,nearby_locs,origin_loc,search_radius=8.04672):
+        queue = []
+
+        queue.append(origin_loc)
+        
+        while len(queue) > 0:
+            prev_loc = queue.pop(0)
+
+            north = self.get_loc_given_dist_and_bear(prev_loc[0],prev_loc[1],6.43738,0)#north
+            if hs.haversine(origin_loc,north) <= search_radius and north not in queue and north not in nearby_locs:
+                print(hs.haversine(origin_loc,north))
+                queue.append(north)
+                nearby_locs.append(north) 
+            east = self.get_loc_given_dist_and_bear(prev_loc[0],prev_loc[1],6.43738,90)#east
+            if hs.haversine(origin_loc,east) <= search_radius and east not in queue and east not in nearby_locs:
+                queue.append(east)
+                nearby_locs.append(east) 
+            south = self.get_loc_given_dist_and_bear(prev_loc[0],prev_loc[1],6.43738,180)#south
+            if hs.haversine(origin_loc,south) <= search_radius and south not in queue and south not in nearby_locs:
+                queue.append(south)
+                nearby_locs.append(south) 
+            west = self.get_loc_given_dist_and_bear(prev_loc[0],prev_loc[1],6.43738,270)#west
+            if hs.haversine(origin_loc,west) <= search_radius and west not in queue and west not in nearby_locs:
+                queue.append(west)
+                nearby_locs.append(west) 
+    '''      
+    def calculate_nearby_locs(self,nearby_locs,origin_loc,search_radius=8.04672):
+        dist_bw_points = self.guide[search_radius] 
+
+        vertex = int(search_radius/ dist_bw_points) 
+
+        print(vertex)
+
+        for x in range(-vertex,vertex + 1):
+            new_lat = self.get_loc_given_dist_and_bear(origin_loc[0], origin_loc[1], abs(x) * dist_bw_points, 0 if x >= 0 else 180)
+            if hs.haversine(origin_loc,new_lat) <= search_radius and new_lat not in nearby_locs :
+                nearby_locs.append(new_lat)
+
+        for y in range(-vertex,vertex + 1):
+            new_lon = self.get_loc_given_dist_and_bear(origin_loc[0], origin_loc[1], abs(y) * dist_bw_points, 90 if y >= 0 else 270)
+            if hs.haversine(origin_loc,new_lon) <= search_radius and new_lon not in nearby_locs:
+                nearby_locs.append(new_lon)
+        return nearby_locs
 
 # score calculation/optimal for star gazing or not?            
 class score:
