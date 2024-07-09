@@ -1,0 +1,31 @@
+{%  extends "basic_layout.html" %}
+{% block content %}
+    <style>
+        body{
+            background-image: url("../images/Star-background.jpg");
+
+        }
+        .border {
+           height: 1px;
+           width: 120px;
+           background: #5b7e96;
+           display: block;
+           margin: 0 auto;
+        }
+
+        a {
+            color: white;
+        }
+    </style>
+    <div style="text-align: center">
+        <h2 style="margin-top: 100px">Welcome to StarSight!</h2>
+        <h4> The better way to see stars </h4>
+    </div>
+
+    <div style="text-align: center">
+        <p class="border" style="margin-top: 70px"> <a href="">Find stars!</a></p>
+        <p class="border" style="margin-top: 50px"> <a href="">Saved Locations</a></p>
+        <p class="border" style="margin-top: 50px"> <a href="">Learn more </a></p>
+
+    </div>
+{% endblock %}
