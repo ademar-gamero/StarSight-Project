@@ -36,6 +36,10 @@ with app.app_context():
 def main_menu():
     return render_template("main_menu.html")
 
+@app.route("/learn_more")
+def learn_more():
+    return render_template("learn_more.html")
+
 @app.route("/update_server", methods=['POST'])
 def webhook():
     if request.method == 'POST':
