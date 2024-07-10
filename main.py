@@ -50,7 +50,7 @@ def webhook():
 def saved_locations_page():
     #may return multiple users
     #get user id first, then saved locations
-    locations = db.saved_locations()
+    locations = db.user_id.saved_locations()
     return render_template('saved_locations.html', locations=locations)
 
 if __name__ == "__main__":
