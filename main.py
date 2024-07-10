@@ -41,8 +41,23 @@ class Location(db.Model):
 with app.app_context():
     db.create_all()
 
-
 @app.route("/")
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        #user = User.query.filter_by(username=username).first()  # Query the User model by username
+        #if user and check_password_hash(user.password, password):  # Check if user exists and password matches
+        #possible syntax to retrieve users data from db
+
+        if username == 'admin' and password == 'password': # For testing purposes
+            return render_template("main_menu.html")  # Redirect to main menu on successful login
+        else:
+            flash('Invalid credentials, please try again.', 'danger')
+    return render_template('login.html')  # Render the login template on GET request or failed login
+
+@app.route("/main_menu")
 def main_menu():
     return render_template("main_menu.html")
 
