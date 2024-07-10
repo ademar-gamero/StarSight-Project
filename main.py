@@ -53,9 +53,18 @@ def saved_locations_page():
     locations = db.user_id.saved_locations()
     return render_template('saved_locations.html', locations=locations)
 
-@app.route('/results')
-def calculations(latitude, longitude):
-    
+#implementing later
+#@app.route('/save_location')
+#def save_location():
+    #redirect url after saving location it goes to the saved location saved_locations_page
+    #return redirect(url_for('saved_locations'))
+
+
+@app.route('/<float:latitude>/<float:longitude>/results')
+def calculate_results(latitude, longitude):
+    #basically sends a POST request for database
+    #if successful we send the data into the html file
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
