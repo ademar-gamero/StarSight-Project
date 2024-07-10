@@ -111,6 +111,8 @@ class curr_user():
     #method that gets new locations based on bearing/dist
     def get_loc_given_dist_and_bear(self, lat1, lon1, dist, bearing, R=6371):
         #convert inputs to radians
+        lat1 = float(lat1)
+        lon1 = float(lon1)
         rad_lat1 = radians(lat1)
         rad_lon1 = radians(lon1)
         rad_bearing = radians(bearing)
@@ -168,21 +170,30 @@ class curr_user():
                 nearby_locs.append(west) 
     '''      
     def calculate_nearby_locs(self,nearby_locs,origin_loc,search_radius=8.04672):
+        lat = float(origin_loc[0])
+        lon = float(origin_loc[1])
+        origin_loc = (lat,lon)
         dist_bw_points = self.guide[search_radius] 
 
         vertex = int(search_radius/ dist_bw_points) 
 
         print(vertex)
-
+        count = 0
         for x in range(-vertex,vertex + 1):
             new_lat = self.get_loc_given_dist_and_bear(origin_loc[0], origin_loc[1], abs(x) * dist_bw_points, 0 if x >= 0 else 180)
             if hs.haversine(origin_loc,new_lat) <= search_radius and new_lat not in nearby_locs :
-                nearby_locs.append(new_lat)
+                count += 1
+                nearby_locs.append({'lat':new_lat[0], 'lng':new_lat[1], 'label':f'Marker {count}'})
 
         for y in range(-vertex,vertex + 1):
             new_lon = self.get_loc_given_dist_and_bear(origin_loc[0], origin_loc[1], abs(y) * dist_bw_points, 90 if y >= 0 else 270)
             if hs.haversine(origin_loc,new_lon) <= search_radius and new_lon not in nearby_locs:
-                nearby_locs.append(new_lon)
+                count += 1
+                nearby_locs.append({'lat':new_lon[0], 'lng':new_lon[1], 'label':f'Marker {count}'})
+        if search_radius == 8.04672:
+            nearby_locs.pop(5)
+        else:
+            nearby_locs.pop(4)
         return nearby_locs
 
 # score calculation/optimal for star gazing or not?            

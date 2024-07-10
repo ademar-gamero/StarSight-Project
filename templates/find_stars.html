@@ -1,0 +1,100 @@
+{% extends "basic_layout.html" %}
+{% block content %}
+  <style>
+  #map{
+    height: 400px;
+    width: 100%;
+  } 
+  </style>
+  
+  <h2> Find Stars! </h2>
+  <div class="form-section">
+    <form action = ""method="POST">
+      
+  <div id="map"></div>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key={{map_api_key}}&callback=initMap">
+  </script>    
+  <form id="LocationForm">
+        {{ form.hidden_tag() }}
+        {{ form.loc_radius.label }}
+        {{ form.loc_radius }}
+        <label for="lat">Latitude:</label>
+        <input type="number" step="any" id="lat" name="lat">
+        <label for="lng">Longitude:</label>
+        <input type="number" step="any" id="lng" name="lng">
+        <input type="submit" value="Find nearby locations!">
+    </form>
+    
+    {% if markers %}
+      <table>
+        <tr>
+          <th> Marker </th>
+          <th> Latitude </th>
+          <th> Longitude </th>
+        </tr>
+        {% for marker in markers%}
+        <tr>
+      <td>{{marker["label"]}}</td>
+      <td>{{marker["lat"]}}</td>
+      <td>{{marker["lng"]}}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+    {% if msg != None %}
+      {{msg}}
+    {% endif %}
+    <script>
+        let map;
+        let markers = [];
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+              center: {lat: {{usr_coords[0]}}, lng: {{usr_coords[1]}}},
+                zoom: 10
+            });
+
+            // Add click event listener to the map so we can get clickes
+            map.addListener('click', function(event) {
+                placeMarker(event.latLng);
+                updateForm(event.latLng);
+            });
+
+            // Add markers from server
+            {% for marker in markers %}
+              new google.maps.Marker({
+                position: {lat: {{marker.lat}}, lng: {{marker.lng}}},
+                map: map,
+                label: {
+                  text: "{{marker.label}}",
+                  color: 'black',
+                  fontSize: '14px',
+                }
+              });           
+  
+            {% endfor %}
+          }
+
+
+        function placeMarker(location) {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+
+            // Adds the new marker to the map
+            let marker = new google.maps.Marker({
+                position: location,
+                map: map,
+                title: 'Clicked Location'
+            });
+            markers.push(marker);
+        }
+
+        function updateForm(latLng) {
+            document.getElementById('lat').value = latLng.lat().toFixed(6);
+            document.getElementById('lng').value = latLng.lng().toFixed(6);
+        }
+
+      initMap();
+    </script>
+{% endblock %}

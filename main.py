@@ -1,12 +1,19 @@
 import git
 from flask import Flask, render_template, url_for, flash, redirect, request
 from flask_sqlalchemy import SQLAlchemy
+from forms import LocationForm
+from distance import curr_user, score, CityAPI
+from weather_api import WeatherAPI
+import secrets
+import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
 
 db = SQLAlchemy(app)
-
+cur_usr = curr_user()
+sec = secrets.token_urlsafe(16)
+app.secret_key = sec
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)  
@@ -37,6 +44,34 @@ with app.app_context():
 def main_menu():
     return "<h1> StarSight Application version 1.0 </h1>"
 
+@app.route("/find_stars", methods=['GET','POST'])
+def find_stars():
+    form = LocationForm()
+    api_key = os.environ.get('GOOGLE_KEY') 
+    if request.method == "POST":
+       search_radius = form.loc_radius.data
+       lat = request.form.get('lat')
+       lng = request.form.get('lng')
+       if lat == '' or lng == '':
+        return render_template("find_stars.html", form=form, map_api_key = api_key,usr_coords = cur_usr.coords,markers=[],msg="Please select a point or enter a point from the map")
+       origin = (lat,lng)
+       nearby_locs = cur_usr.calculate_nearby_locs([], origin, search_radius)
+       optimal_locs = []
+       for loc in nearby_locs:
+           loc_score = score()
+           city = CityAPI(loc["lat"],loc["lng"])
+           local = city.get_nearby_cities()
+           city.city_calculate(loc_score,local)
+           weather_response = WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
+           weather_deduction = WeatherAPI.get_weather_score(weather_response)
+           loc_score.lower_score(weather_deduction)
+           if loc_score.score >= 3:
+               optimal_locs.append(loc)
+
+       return render_template("find_stars.html", form=form, map_api_key = api_key,usr_coords = cur_usr.coords,markers=optimal_locs,msg=None)
+    else:
+        return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = cur_usr.coords,markers=[],msg=None)
+         
 @app.route("/update_server", methods=['POST'])
 def webhook():
     if request.method == 'POST':
