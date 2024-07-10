@@ -4,17 +4,43 @@
     {% if username %}
         <h1>Hello</h1>
     {% else %}
-        <form method="POST" class = "form-control">
-            {{  form.hidden_tag() }}
+        <div class="content-section">
+            <form method="POST" action="login.html">
 
-            {{ form.username.label() }}
-            {{ form.username() }}
+                    {{ form.hidden_tag() }}
+                <p>
+                    {{ form.username.label() }}
+                    {{ form.username(size=30) }}
+                    <br/>
+                </p>
 
-            {{ form.password.label() }}
+                <p>
+                    {{ form.password.label() }}
+                    {{ form.password(size=30) }}
+                    <br/>
+                </p>
 
-            {{ form.password() }}
-            <br/>
-            {{ form.submit() }}
-        </form>
+                <p>
+                    {{ form.confirm_password.label() }}
+                    {{ form.confirm_password(size=30) }}
+                    <br/>
+                </p>
+                {{ form.submit() }}
+
+            </form>
+        </div>
+
     {% endif %}
+
+    <style>
+        form{
+            border: 2px solid black;
+            border-radius: 10px;
+            text-align: center;
+            width: 50%; /* adjust to desired width */
+            margin: 0 auto; /* center the container */
+        }
+    </style>
+
+
 {% endblock %}
