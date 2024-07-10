@@ -53,5 +53,8 @@ def saved_locations_page():
     locations = db.user_id.saved_locations()
     return render_template('saved_locations.html', locations=locations)
 
+@app.route('/results')
+def 
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
