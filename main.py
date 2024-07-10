@@ -150,6 +150,7 @@ def saved_locations_page():
 
 @app.route('/<float:latitude>/<float:longitude>/results')
 def calculate_results(latitude, longitude):
+    pass
     #basically sends a POST request for database
     #if successful we send the data into the html file
 
