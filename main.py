@@ -49,6 +49,9 @@ def find_stars():
     form = LocationForm()
     api_key = os.environ.get('GOOGLE_KEY') 
     if request.method == "POST":
+       score = request.form.get('selection')
+       if score != None:
+           return redirect(url_for("results",point=score))
        search_radius = form.loc_radius.data
        lat = request.form.get('lat')
        lng = request.form.get('lng')
@@ -68,9 +71,13 @@ def find_stars():
            if loc_score.score >= 3:
                optimal_locs.append(loc)
 
-       return render_template("find_stars.html", form=form, map_api_key = api_key,usr_coords = cur_usr.coords,markers=optimal_locs,msg=None)
+       return render_template("find_stars.html", form=form, map_api_key = api_key,usr_coords = origin,markers=optimal_locs,msg=None)
     else:
         return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = cur_usr.coords,markers=[],msg=None)
+
+@app.route("/results")
+def results(point):
+    return render_template("results.html",ovr_rating=point,light_rating=point)
          
 @app.route("/update_server", methods=['POST'])
 def webhook():

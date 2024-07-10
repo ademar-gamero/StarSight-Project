@@ -9,7 +9,7 @@
   
   <h2> Find Stars! </h2>
   <div class="form-section">
-    <form action = ""method="POST">
+    <form action = "" method="POST">
       
   <div id="map"></div>
   <script async defer
@@ -26,6 +26,7 @@
         <input type="submit" value="Find nearby locations!">
     </form>
     
+  <form action="" method="POST">
     {% if markers %}
       <table>
         <tr>
@@ -35,13 +36,16 @@
         </tr>
         {% for marker in markers%}
         <tr>
-      <td>{{marker["label"]}}</td>
-      <td>{{marker["lat"]}}</td>
-      <td>{{marker["lng"]}}</td>
+          <td>{{marker["label"]}}</td>
+          <td>{{marker["lat"]}}</td>
+          <td>{{marker["lng"]}}</td>
+          <td> <input type="radio" name="selection" value={{(marker["lat"],marker["lng"])}}></td>
         </tr>
         {% endfor %}
       </table>
+      <input type="submit" value="View Forecast">
     {% endif %}
+  </form>
     {% if msg != None %}
       {{msg}}
     {% endif %}

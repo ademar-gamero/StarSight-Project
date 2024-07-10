@@ -75,6 +75,8 @@ class CityAPI():
                     api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
                     response1 = requests.get(api_url, headers={'X-Api-Key':os.environ.get('NINJA_KEY')})
                     dict2 = json.loads(response1.text)
+                    if dict2 == []:
+                        return
                     pop = dict2[0]["population"]
                     if 50000 <= pop <= 100000:
                         score_obj.lower_score(1)
@@ -197,7 +199,7 @@ class curr_user():
         return nearby_locs
 
 # score calculation/optimal for star gazing or not?            
-class score:
+class score():
     def __init__(self):
         self.score = 5
         self.light_pollution = 5
