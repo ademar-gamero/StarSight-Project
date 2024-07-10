@@ -63,6 +63,10 @@ def register():
                            username = username,
                            password = password)
 
+@app.route("/learn_more")
+def learn_more():
+    return render_template("learn_more.html")
+
 @app.route("/update_server", methods=['POST'])
 def webhook():
     if request.method == 'POST':
