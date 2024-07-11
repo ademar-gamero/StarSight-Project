@@ -4,6 +4,8 @@ from distance import DB, score
 from weather_api import WeatherAPI
 import requests
 from unittest.mock import patch
+import sys
+from main_py_file_name import app, db
 
 class testDB(unittest.TestCase):
     #TSET FOR DB
@@ -84,4 +86,51 @@ class testWeatherAPI(unittest.TestCase):
         self.assertEqual(WeatherAPI.point_count(51), 3)
         self.assertEqual(WeatherAPI.point_count(70), 3)
         self.assertEqual(WeatherAPI.point_count(100), 3)
-        
+
+sys.path.append('../StarSight-Project') # imports python file from parent directory
+
+#page works check
+class BasicTests(unittest.TestCase):
+
+    # executed prior to each test
+    def setUp(self):
+        self.app = app.test_client()
+
+    ###############
+    #### tests ####
+    ###############
+
+    def test_main_page(self):
+        response = self.app.get('/', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_login_page(self):
+        response = self.app.get('/login', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_find_stars_page(self):
+        response = self.app.get('/find_stars', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+    
+    def test_saved_locations_page(self):
+        response = self.app.get('/saved_locations', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_results_page(self):
+        #might need to correctly link
+        response = self.app.get('/results', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+    
+    #login checks
+    def test_valid_registration(self):
+        #add registration test
+        self.assertEqual(response.status_code, 200)
+
+    def test_invalid_email_registration(self):
+        response = self.register('test2', 'test@example', 'FlaskIsAwesome')
+        self.assertIn(b'Invalid email address.', response.data)
+        self.assertNotEqual(response.status_code, 200)
+
+    #test forms
+if __name__ == "__main__":
+    unittest.main()

@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: url('{{ url_for("static", filename="galaxy_photo.jpg") }}') no-repeat center center fixed;
+            background: url('{{ url_for("static", filename='/images/Star-background.jpg')}}') no-repeat center center fixed;
             background-size: cover;
             padding: 20px;
             color: #fff; 
@@ -116,8 +116,7 @@
                 </tbody>
             </table>
         </div>
-<<<<<<< HEAD
-=======
+
       <form action="" method="POST">
         <label for="nameLabel"> Enter Name</label>
         <input type="text" id="nameLabel" name="name">
@@ -125,7 +124,6 @@
         <input type="hidden" name="hidden_lng" value="{{point[1]}}">
         <input type="submit" value="Save Location!">
       </form>
->>>>>>> 92271be2afb4946e7b0ba9eb743bd271b3c1285a
     </div>
 </body>
 </html>
