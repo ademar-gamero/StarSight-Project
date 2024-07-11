@@ -1,6 +1,5 @@
 {% extends 'basic_layout.html' %}
-{% block content %}
-
+{% block content%}
     {% if username %}
         return
     {% else %}
@@ -31,7 +30,7 @@
 
     <style>
         body {
-            background-image: url({{ url_for('static', filename='/images/space-galaxy-cyan-stars-4k-su-2722537309.jpg') }});
+            background-image: url({{ url_for('static', filename='/images/') }});
             background-repeat: no-repeat;
             background-position: center;
             background-size: cover;
@@ -44,6 +43,4 @@
             margin: 0 auto;
         }
     </style>
-
-
 {% endblock %}
