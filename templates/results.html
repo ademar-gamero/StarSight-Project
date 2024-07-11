@@ -76,73 +76,65 @@
 <body>
     <div class="container">
         <h1>Star Gazing Forecast</h1>
-        
+       {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              <div class="container mt-4">
+                  {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                          {{ message }}
+                          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                  {% endfor %}
+              </div>
+          {% endif %}
+      {% endwith %}   
+        <h2> Your Location: {{point[0]}},{{point[1]}} <h2>
         <div class="section">
             <div class="section-title">Starlight Ranking</div>
             <div class="section-content">
-                <p>Ranking information will be displayed here...</p>
+          <p>{{rating}}</p>
             </div>
         </div>
         
         <div class="section">
             <div class="section-title">Light Pollution</div>
             <div class="section-content">
-                <p>Light pollution levels will be displayed here...</p>
+          <p>{{light_rating}}</p>
             </div>
         </div>
         
         <div class="section">
             <div class="section-title">Lunar Phase</div>
             <div class="section-content">
-                <p>Lunar phase details will be displayed here...</p>
+          <p>{{ lunar_phase }}</p>
             </div>
         </div>
-        
         <div class="section">
             <h2>Weather Forecast</h2>
             <table>
                 <thead>
                     <tr>
                         <th>Time</th>
-                        <th>Temperature (°C)</th>
                         <th>Weather Conditions</th>
                     </tr>
                 </thead>
                 <tbody>
+                  {% for report in weather_report %}
                     <tr>
-                        <td>12:00 PM will link times to data</td>
-                        <td>24</td>
-                        <td>Clear sky</td>
+                      <td>{{report[0]}}</td>
+                      <td>{{report[1]}}</td>
                     </tr>
-                    <tr>
-                        <td>3:00 PM</td>
-                        <td>27</td>
-                        <td>Partly cloudy</td>
-                    </tr>
-                    <tr>
-                        <td>6:00 PM</td>
-                        <td>23</td>
-                        <td>Light rain</td>
-                    </tr>
-                    <tr>
-                        <td>9:00 PM</td>
-                        <td>20</td>
-                        <td>Clear sky</td>
-                    </tr>
-                    <tr>
-                        <td>12:00 AM</td>
-                        <td>18</td>
-                        <td>Clear sky</td>
-                    </tr>
-                    <tr>
-                        <td>3:00 AM</td>
-                        <td>16</td>
-                        <td>Partly cloudy</td>
-                    </tr>
+                  {% endfor %}
                 </tbody>
             </table>
         </div>
-        <button class="save-button" onclick="saveLocation()">Save Location</button>
+      <form action="" method="POST">
+        <label for="nameLabel"> Enter Name</label>
+        <input type="text" id="nameLabel" name="name">
+        <input type="hidden" name="hidden_lat" value="{{point[0]}}">
+        <input type="hidden" name="hidden_lng" value="{{point[1]}}">
+        <input type="submit" value="Save Location!">
+      </form>
     </div>
     <script>
         function saveLocation() {
