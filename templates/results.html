@@ -91,50 +91,50 @@
         <h2> Your Location: {{point[0]}},{{point[1]}} <h2>
         <div class="section">
             <div class="section-title">Starlight Ranking</div>
-            <div class="section-content">
-          <p>{{rating}}</p>
+                <div class="section-content">
+                    <p>{{rating}}</p>
+                </div>
             </div>
-        </div>
         
-        <div class="section">
-            <div class="section-title">Light Pollution</div>
-            <div class="section-content">
-          <p>{{light_rating}}</p>
+            <div class="section">
+                <div class="section-title">Light Pollution</div>
+                    <div class="section-content">
+                        <p>{{light_rating}}</p>
+                    </div>
             </div>
-        </div>
         
-        <div class="section">
-            <div class="section-title">Lunar Phase</div>
-            <div class="section-content">
-          <p>{{ lunar_phase }}</p>
+            <div class="section">
+                <div class="section-title">Lunar Phase</div>
+                <div class="section-content">
+                    <p>{{ lunar_phase }}</p>
+                </div>
             </div>
-        </div>
-        <div class="section">
-            <h2>Weather Forecast</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Weather Conditions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                  {% for report in weather_report %}
-                    <tr>
-                      <td>{{report[0]}}</td>
-                      <td>{{report[1]}}</td>
-                    </tr>
-                  {% endfor %}
-                </tbody>
-            </table>
-        </div>
-      <form action="" method="POST">
-        <label for="nameLabel"> Enter Name</label>
-        <input type="text" id="nameLabel" name="name">
-        <input type="hidden" name="hidden_lat" value="{{point[0]}}">
-        <input type="hidden" name="hidden_lng" value="{{point[1]}}">
-        <input type="submit" value="Save Location!">
-      </form>
+            <div class="section">
+                <h2>Weather Forecast</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Weather Conditions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                      {% for report in weather_report %}
+                        <tr>
+                          <td>{{report[0]}}</td>
+                          <td>{{report[1]}}</td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+          <form action="" method="POST">
+            <label for="nameLabel"> Enter Name</label>
+            <input type="text" id="nameLabel" name="name">
+            <input type="hidden" name="hidden_lat" value="{{point[0]}}">
+            <input type="hidden" name="hidden_lng" value="{{point[1]}}">
+            <input type="submit" value="Save Location!">
+          </form>
     </div>
     <script>
         function saveLocation() {

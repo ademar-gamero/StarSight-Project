@@ -58,12 +58,21 @@ password = generate_password_hash("password")
 with app.app_context():
     db.create_all()
 
-
 @login_manager.user_loader
 def load_user_from_db(user_id):
     return User.query.get(int(user_id))
 
-@app.route("/")
+@app.after_request
+def add_header(response):
+    """
+    Add headers to force fresh content and prevent caching.
+    """
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, public, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+
+@app.route('/')
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -187,12 +196,11 @@ def results(rating,light_rating,lunar_phase):
         if lat and lng and name:
             lat = float(lat)
             lng = float(lng)
-            new_loc = Location(name=name,latitude=lat,longitude=lng,user=current_user)  
+            new_loc = Location(name=name,latitude=lat,longitude=lng,user=current_user)
             db.session.add(new_loc)
             db.session.commit()
         flash("Location Saved successfully")
-    return render_template("results.html",rating=rating,light_rating=light_rating,weather_report=weather_report,lunar_phase=lunar_phase,
-                           point=point)
+    return render_template("results.html",rating=rating,light_rating=light_rating, weather_report=weather_report,lunar_phase=lunar_phase,point=point)
          
 @app.route("/update_server", methods=['POST'])
 def webhook():
