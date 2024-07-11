@@ -1,6 +1,7 @@
 import git
 from flask import Flask, render_template, url_for, flash, redirect, request
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import check_password_hash, generate_password_hash
 
 from forms import LocationForm, RegistrationForm
 from distance import curr_user, score, CityAPI
@@ -8,18 +9,23 @@ from weather_api import WeatherAPI
 import secrets
 import os
 
-
-
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
+
+# db = SQLAlchemy(app)
+# cur_usr = curr_user()
+# sec = secrets.token_urlsafe(16)
+# app.secret_key = sec
+#
+# secret = secrets.token_urlsafe(16)
+# app.config['SECRET_KEY'] = secret
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = os.urandom(24)
 
 db = SQLAlchemy(app)
-cur_usr = curr_user()
-sec = secrets.token_urlsafe(16)
-app.secret_key = sec
-
-secret = secrets.token_urlsafe(16)
-app.config['SECRET_KEY'] = secret
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -48,21 +54,34 @@ class Location(db.Model):
 with app.app_context():
     db.create_all()
 
+    # Create test user
+    test_user = User(username='testuser', email='testuser@example.com', password=secrets.token_urlsafe(16))
+    db.session.add(test_user)
+    db.session.commit()
+
+    # Create test locations
+    test_location1 = Location(state='California', county='Los Angeles', latitude=34.0522, longitude=-118.2437, elevation=89, user_id=test_user.id)
+    test_location2 = Location(state='California', county='San Francisco', latitude=37.7749, longitude=-122.4194, elevation=16, user_id=test_user.id)
+
+    db.session.add(test_location1)
+    db.session.add(test_location2)
+    db.session.commit()
+
 @app.route("/")
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        #user = User.query.filter_by(username=username).first()  # Query the User model by username
-        #if user and check_password_hash(user.password, password):  # Check if user exists and password matches
-        #possible syntax to retrieve users data from db
+        # Hardcoded username and password for testing
+        if username == 'admin' and password == 'password':
+            user = User.query.filter_by(username='testuser').first()
+            if user:
+                flash('Login successful!', 'success')
+                return render_template('saved_locations.html', user_id=user.id)
+        flash('Invalid credentials, please try again.', 'danger')
+    return render_template('login.html')
 
-        if username == 'admin' and password == 'password': # For testing purposes
-            return render_template("main_menu.html")  # Redirect to main menu on successful login
-        else:
-            flash('Invalid credentials, please try again.', 'danger')
-    return render_template('login.html')  # Render the login template on GET request or failed login
 
 @app.route("/main_menu")
 def main_menu():
@@ -134,24 +153,18 @@ def webhook():
     else:
         return 'Wrong event type', 400
       
-@app.route('/saved_locations')
-def saved_locations_page():
-    #may return multiple users
-    #get user id first, then saved locations
-    locations = db.user_id.saved_locations()
-    return render_template('saved_locations.html', locations=locations)
+@app.route('/save_location', methods=['POST'])
+def saved_locations_page(user_id):
+    user = User.query.get(user_id)
+    locations = user.saved_locations
+    return render_template('saved_locations.html', locations=locations, user_id=user_id)
 
-#implementing later
-#@app.route('/save_location')
-#def save_location():
-    #redirect url after saving location it goes to the saved location saved_locations_page
-    #return redirect(url_for('saved_locations'))
-
-
-@app.route('/<float:latitude>/<float:longitude>/results')
-def calculate_results(latitude, longitude):
+@app.route('/<int:id>/results')
+def display_results(user_id, id):
     #basically sends a POST request for database
     #if successful we send the data into the html file
+    location = Location.query.get_or_404(id)
+    return render_template('results.html', location=location, user_id=user_id)
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
