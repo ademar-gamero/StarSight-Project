@@ -1,20 +1,66 @@
-{% extends 'basic_layout.html' %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account</title>
+    <!-- Link to Bootstrap CSS for styling -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+            background-image: linear-gradient(120deg, #AE66FF, #f7eff6);
+            background-size: cover;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            text-align: center;
+        }
+        .form-container {
+            max-width: 350px; /* Adjust the max-width to make it wider */
+            width: 100%; /* Make the container responsive */
+            padding: 20px;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 20px; /* Adds top margin to push the fields down */
+        }
+        h1 {
+            color: rebeccapurple;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Create StarSight Account!</h1>
+        <div class="form-container">
+            {% if username %}
+                <h1>Hello</h1>
+            {% else %}
+                <form method="POST" class="form-control">
+                    {{ form.hidden_tag() }}
 
-    {% if username %}
-        <h1>Hello</h1>
-    {% else %}
-        <form method="POST" class = "form-control">
-            {{  form.hidden_tag() }}
+                    <div class="mb-3 form-group-margin">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control") }}
+                    </div>
 
-            {{ form.username.label() }}
-            {{ form.username() }}
+                    <div class="mb-3 form-group-margin">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control") }}
+                    </div>
 
-            {{ form.password.label() }}
-
-            {{ form.password() }}
-            <br/>
-            {{ form.submit() }}
-        </form>
-    {% endif %}
-{% endblock %}
+                    <div class="d-grid form-group-margin" style="margin-top: 20px;">
+                        {{ form.submit(class="btn btn-dark") }}
+                    </div>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+    <!-- Link to Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
