@@ -133,11 +133,26 @@ def webhook():
     else:
         return 'Wrong event type', 400
       
-@app.route('/saved_locations')
-def saved_locations_page():
-    #may return multiple users
-    #get user id first, then saved locations
-    locations = db.user_id.saved_locations()
+@app.route('/saved_locations', methods=['GET', 'POST'])
+def saved_locations():
+    if request.method == 'POST':
+        state = request.form['state']
+        county = request.form['county']
+        latitude = request.form['latitude']
+        longitude = request.form['longitude']
+        location = Location(state=state, county=county, latitude=latitude, longitude=longitude, user_id=current_user.id)
+        db.session.add(location)
+        db.session.commit()
+        return redirect(url_for('saved_locations'))
+    
+    locations = current_user.saved_locations
+    return render_template('saved_locations.html', locations=locations)
+    @app.route('/saved_locations')
+
+ #def saved_locations():
+  #  user_id = 1  # Replace with your actual user ID logic (e.g., current user ID)
+#user = User.query.get(user_id)
+   # locations = user.saved_locations
     return render_template('saved_locations.html', locations=locations)
 
 
