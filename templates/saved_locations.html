@@ -51,7 +51,6 @@
 
     <h1>Saved Locations</h1>
     <table>
-        <thead>
             <tr>
                 <th>ID</th>
                 <th>Location Name</th>
@@ -59,9 +58,6 @@
                 <th>Longitude</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
-          {% if location %}
             {% for location in locations %}
                 <tr>
                     <td>{{ location.id }}</td>
@@ -71,11 +67,7 @@
                     <td><a href="/{{ location.latitude }}/{{location.longitude}}/results">View Results</a></td>
                 </tr>
             {% endfor %}
-          {% else %}
-            <h3> You Have no Saved Locations <h3>
-          {% endif %}
 
-        </tbody>
     </table>
 </html>
 {% endblock %}

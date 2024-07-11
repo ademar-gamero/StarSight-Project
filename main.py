@@ -2,6 +2,7 @@ import git
 import ast
 import json
 from flask import Flask, render_template, url_for, flash, redirect, request, session
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash,check_password_hash
 
@@ -17,6 +18,9 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
 
 db = SQLAlchemy(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
 cur_usr = curr_user()
 sec = secrets.token_urlsafe(16)
 app.secret_key = sec
@@ -24,7 +28,7 @@ app.secret_key = sec
 secret = secrets.token_urlsafe(16)
 app.config['SECRET_KEY'] = secret
 
-class User(db.Model):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=True)
@@ -37,6 +41,7 @@ class User(db.Model):
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=False, nullable=False)
     state = db.Column(db.String(20), unique=False, nullable=True)
     county = db.Column(db.String(20), unique=False, nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
@@ -45,7 +50,7 @@ class Location(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
-        return f"Location('{self.id}', '{self.user_id.username}','{self.state}')"
+        return f"Location('{self.id},'{self.latitude}',{self.longitude})"
 
 
 password = generate_password_hash("password")
@@ -54,7 +59,9 @@ with app.app_context():
     db.create_all()
 
 
-
+@login_manager.user_loader
+def load_user_from_db(user_id):
+    return User.query.get(int(user_id))
 
 @app.route("/")
 @app.route('/login', methods=['GET', 'POST'])
@@ -64,13 +71,20 @@ def login():
         password = request.form['password']
         user = User.query.filter_by(username=username).first()  # Query the User model by username
         if user and check_password_hash(user.password, password):
-            session["current_user"] = user.id
+            login_user(user)
             return redirect(url_for('main_menu'))  # Redirect to main menu on successful login
         else:
             flash('Invalid credentials, please try again.', 'danger')
     return render_template('login.html')  # Render the login template on GET request or failed login
 
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
 @app.route("/main_menu")
+@login_required
 def main_menu():
     return render_template("main_menu.html")
 
@@ -150,17 +164,18 @@ def find_stars():
         return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = cur_usr.coords,markers=[],msg=None)
 
 @app.route("/results/<rating>/<light_rating>/<lunar_phase>",methods=['GET','POST'])
+@login_required
 def results(rating,light_rating,lunar_phase):
     weather_report = session.get("weather_report", [])
     point = session.get("location", [])
     if request.method == "POST":
         lat = request.form.get("hidden_lat")
         lng = request.form.get("hidden_lng")
-        curr = User.query.filter_by(id=session.get("current_user")).first()
-        if lat and lng:
+        name = request.form.get("name")
+        if lat and lng and name:
             lat = float(lat)
             lng = float(lng)
-            new_loc = Location(latitude=lat,longitude=lng,user=curr)  
+            new_loc = Location(name=name,latitude=lat,longitude=lng,user=current_user)  
             db.session.add(new_loc)
             db.session.commit()
         flash("Location Saved successfully")
@@ -178,15 +193,15 @@ def webhook():
         return 'Wrong event type', 400
       
 @app.route('/saved_locations')
+@login_required
 def saved_locations_page():
     #may return multiple users
     #get user id first, then saved locations
-    locations = None
-    curr_usr_id = session.get("current_user")
-    if curr_usr_id != None:
-        curr_user = User.query.get(curr_usr_id)
-        if curr_user != None:
-            locations = curr_user.saved_locations
+    locations=[]
+    parsed_locations = []
+    user = load_user_from_db(current_user.id)
+    if user:
+        locations= user.saved_locations
     return render_template('saved_locations.html', locations=locations)
 
 #implementing later
