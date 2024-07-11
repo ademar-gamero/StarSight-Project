@@ -36,6 +36,15 @@ class WeatherAPI:
             curr = response['forecast']['forecastday'][1]['hour'][i]
             print(curr['time'], curr['condition']['text'])
 
+    def return_weather_report(response):
+        weather_report = []
+        for i in range(22, 24):
+            curr = response['forecast']['forecastday'][0]['hour'][i]
+            weather_report.append((curr['time'], curr['condition']['text']))
+        for i in range(0, 4):
+            curr = response['forecast']['forecastday'][1]['hour'][i]
+            weather_report.append((curr['time'], curr['condition']['text']))
+        return weather_report
 
     # called from main
     def print_moon_phase(response):
@@ -45,6 +54,9 @@ class WeatherAPI:
         # left in case of incorporation
         # moon_illumination = response['forecast']['forecastday'][0]['astro']['moon_illumination']
     
+    def return_moon_phase(response):
+        moon_phase = response['forecast']['forecastday'][0]['astro']['moon_phase'] 
+        return moon_phase
 
     # Called by main class
     # Makes call to API forecast data based on location
