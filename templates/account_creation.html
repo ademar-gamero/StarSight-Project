@@ -1,0 +1,20 @@
+{% extends 'basic_layout.html' %}
+{% block content %}
+
+    {% if username %}
+        <h1>Hello</h1>
+    {% else %}
+        <form method="POST" class = "form-control">
+            {{  form.hidden_tag() }}
+
+            {{ form.username.label() }}
+            {{ form.username() }}
+
+            {{ form.password.label() }}
+
+            {{ form.password() }}
+            <br/>
+            {{ form.submit() }}
+        </form>
+    {% endif %}
+{% endblock %}
