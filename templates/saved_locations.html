@@ -51,7 +51,6 @@
 
     <h1>Saved Locations</h1>
     <table>
-        <thead>
             <tr>
                 <th>ID</th>
                 <th>Location Name</th>
@@ -59,8 +58,6 @@
                 <th>Longitude</th>
                 <th>Actions</th>
             </tr>
-        </thead>
-        <tbody>
             {% for location in locations %}
                 <tr>
                     <td>{{ location.id }}</td>
@@ -70,7 +67,7 @@
                     <td><a href="/{{ location.id }}/results">View Results</a></td>
                 </tr>
             {% endfor %}
-        </tbody>
+
     </table>
 </html>
 {% endblock %}
