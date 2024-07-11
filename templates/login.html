@@ -7,47 +7,93 @@
     <!-- Link to Bootstrap CSS for styling -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Center the body content both vertically and horizontally */
         body {
-            display: flex; /* Use Flexbox for layout */
-            justify-content: center; /* Center horizontally */
-            align-items: center; /* Center vertically */
-            height: 100vh; /* Full viewport height */
-            background-color: #f8f9fa; /* Light gray background color */
+            display: flex;
+            height: 100vh;
+            margin: 0;
         }
-        /* Styling for the login container */
-        .login-container {
-            max-width: 400px; /* Maximum width for the login box */
-            padding: 20px; /* Padding inside the box */
-            background: white; /* White background color */
-            border-radius: 10px; /* Rounded corners */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for 3D effect */
+        h2{
+            margin-bottom: 80px;
+            color: rebeccapurple;
         }
+            a {
+                color: rebeccapurple;
+                text-decoration: none; /* Remove underline from links */
+                text-decoration-color: rebeccapurple;
+            }
+        .left-half{
+            flex: 1;
+            background-image: url({{ url_for('static', filename='images/login-background-2.jpg') }});
+            background-size: cover; /* Scales the image to be as large as possible without cropping */
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .right-half{
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: white;
+        }
+        .login-container{
+            max-width: 350px; /* Adjust the max-width to make it wider */
+            width: 100%; /* Make the container responsive */
+            height: 500px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin-top: -50px; /* Adjust as necessary to move it up */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .mb-3:first-of-type {
+            margin-top: 80px; /* Increase this value to add more space between starsight login and username */
+        }
+        .create-account{
+            margin-top: 20px;
+        }
+
     </style>
 </head>
 <body>
-    <!-- Container for the login form -->
-    <div class="login-container">
-        <h2 class="text-center mb-4">Login</h2> <!-- Login header -->
-        <!-- Login form that sends data to the login route in Flask -->
-        <form action="{{ url_for('login') }}" method="POST">
-            <!-- Username input field -->
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label> <!-- Label for username -->
-                <input type="text" class="form-control" id="username" name="username" required> <!-- Input box -->
-            </div>
-            <!-- Password input field -->
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label> <!-- Label for password -->
-                <input type="password" class="form-control" id="password" name="password" required> <!-- Input box -->
-            </div>
-            <!-- Submit button -->
-            <button type="submit" class="btn btn-primary w-100">Login</button>
-        </form>
-      <a href="/create_account"> Create Account! </a>
-    </div>
+    <div class="left-half"></div>
 
-    <!-- Link to Bootstrap JS Bundle -->
+    <div class="right-half">
+        <div class="login-container">
+            <h2 class="text-center mb-4">Login to StarSight</h2>
+
+            <form action="{{ url_for('login') }}" method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label"><b>Username</b></label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label"><b>Password</b></label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+
+                <button type="submit" class="btn btn-dark w-100">Login</button>
+
+                <div class="create-account">
+                    <p>Don't have an account? <a href="/create_account">Create one</a></p>
+                </div>
+            </form>
+            <!--Flash Message-->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="container mt-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <!--Flash Message-->
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
