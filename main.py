@@ -117,8 +117,8 @@ def learn_more():
 def find_stars():
     form = LocationForm()
     api_key = os.environ.get('GOOGLE_KEY') 
+    msg = None
     if request.method == "POST":
-       msg = None
        values = request.form.get('selection')
        if values != None:
            v_processed = json.loads(values)
@@ -134,8 +134,6 @@ def find_stars():
            session["location"] = point
            l_phase = v_processed["lunar_phase"]
            return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase))
-       else:
-           msg = "We did not find any suitable places for star gazing in your area"
        search_radius = form.loc_radius.data
        lat = request.form.get('lat')
        lng = request.form.get('lng')
@@ -158,10 +156,13 @@ def find_stars():
                optimal_locs.append({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),
                                     'light_ranking':loc_score.return_current_light_pollution_str(), 'weather_report':weather_rep,
                                     'lunar_phase':lunar_phase})
-
-       return render_template("find_stars.html", form=form, map_api_key = api_key,usr_coords = origin,markers=optimal_locs,msg=msg)
+       session['optimal_locs'] = optimal_locs
+       return redirect(url_for("find_stars"))
     else:
-        return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = cur_usr.coords,markers=[],msg=None)
+        optimal_locs = session.pop('optimal_locs', [])
+        if optimal_locs == []:
+           msg = "We did not find any suitable places for star gazing in your area"
+        return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = cur_usr.coords,markers=optimal_locs,msg=msg)
 
 @app.route("/results/<rating>/<light_rating>/<lunar_phase>",methods=['GET','POST'])
 @login_required
