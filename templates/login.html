@@ -13,9 +13,14 @@
             margin: 0;
         }
         h2{
-            margin-bottom: 100px;
+            margin-bottom: 80px;
             color: rebeccapurple;
         }
+            a {
+                color: rebeccapurple;
+                text-decoration: none; /* Remove underline from links */
+                text-decoration-color: rebeccapurple;
+            }
         .left-half{
             flex: 1;
             background-image: url({{ url_for('static', filename='images/login-background-2.jpg') }});
@@ -38,9 +43,13 @@
             background: white;
             border-radius: 10px;
             margin-top: -50px; /* Adjust as necessary to move it up */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .mb-3:first-of-type {
-            margin-top: 80px; /* Increase this value to add more space */
+            margin-top: 80px; /* Increase this value to add more space between starsight login and username */
+        }
+        .create-account{
+            margin-top: 20px;
         }
 
     </style>
@@ -51,19 +60,38 @@
     <div class="right-half">
         <div class="login-container">
             <h2 class="text-center mb-4">Login to StarSight</h2>
+
             <form action="{{ url_for('login') }}" method="POST">
                 <div class="mb-3">
-                    <label for="username" class="form-label">Username</label>
+                    <label for="username" class="form-label"><b>Username</b></label>
                     <input type="text" class="form-control" id="username" name="username" required>
                 </div>
 
                 <div class="mb-3">
-                    <label for="password" class="form-label">Password</label>
+                    <label for="password" class="form-label"><b>Password</b></label>
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
 
                 <button type="submit" class="btn btn-dark w-100">Login</button>
+
+                <div class="create-account">
+                    <p>Don't have an account? <a href="/create_account">Create one</a></p>
+                </div>
             </form>
+            <!--Flash Message-->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="container mt-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            <!--Flash Message-->
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
