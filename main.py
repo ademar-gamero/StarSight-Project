@@ -171,6 +171,17 @@ def results(rating,light_rating,lunar_phase):
     if request.method == "POST":
         lat = request.form.get("hidden_lat")
         lng = request.form.get("hidden_lng")
+        user = load_user_from_db(current_user.id)
+        locations = []
+        if user:
+            locations = user.saved_locations
+        for loc in locations:
+            loc_lat = loc.latitude
+            loc_lng = loc.longitude
+            if str(loc_lat) == lat and str(loc_lng) == lng:
+                flash("This location is already saved in the database, error")
+                return render_template("results.html",rating=rating,light_rating=light_rating,weather_report=weather_report,lunar_phase=lunar_phase,
+                           point=point)
         name = request.form.get("name")
         if lat and lng and name:
             lat = float(lat)
@@ -198,7 +209,6 @@ def saved_locations_page():
     #may return multiple users
     #get user id first, then saved locations
     locations=[]
-    parsed_locations = []
     user = load_user_from_db(current_user.id)
     if user:
         locations= user.saved_locations
@@ -211,9 +221,23 @@ def saved_locations_page():
     #return redirect(url_for('saved_locations'))
 
 
-@app.route('/<float:latitude>/<float:longitude>/results')
+@app.route('/<latitude>/<longitude>/results')
 def calculate_results(latitude, longitude):
-    pass
+    loc = (latitude,longitude)
+    session["location"] = loc
+    loc_score = score1()
+    city = CityAPI(latitude,longitude)
+    local = city.get_nearby_cities()
+    city.city_calculate(loc_score,local)
+    weather_response = WeatherAPI.get_weather_response(latitude,longitude)
+    weather_deduction = WeatherAPI.get_weather_score(weather_response)
+    loc_score.lower_score(weather_deduction)
+    weather_rep = WeatherAPI.return_weather_report(weather_response)
+    session["weather_report"] = weather_rep
+    lunar_phase = WeatherAPI.return_moon_phase(weather_response)
+    ranking = loc_score.return_current_score_str()
+    light_ranking = loc_score.return_current_light_pollution_str()
+    return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase))
     #basically sends a POST request for database
     #if successful we send the data into the html file
 
