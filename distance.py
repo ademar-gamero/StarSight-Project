@@ -4,6 +4,7 @@ import sqlite3
 import os
 import geocoder
 import haversine as hs
+import math
 from math import asin, atan2, cos, degrees, radians, sin
 
 class DB():
@@ -94,7 +95,7 @@ class curr_user():
         self.loc = geocoder.ip('me')    
         self.user_nearby_locs = []
         self.coords = self.loc.latlng
-        self.guide = {8.04672:1.60934*4,16.0934:3.21869*4,32.1869:6.43738*4}
+        self.guide = {8.04672:1.60934*2.5,16.0934:1.60934*5,32.1869:1.60934*10}
 
     def print_current_coords(self):
         print(self.loc.latlng)
@@ -177,6 +178,12 @@ class curr_user():
         origin_loc = (lat,lon)
         dist_bw_points = self.guide[search_radius] 
 
+        inner_radius = dist_bw_points
+        inner_circle = self.generate_circle_points(lat, lon, inner_radius, 5)
+        
+        outer_radius = 2 * dist_bw_points
+        outer_circle = self.generate_circle_points(lat, lon, outer_radius, 5)
+        '''
         vertex = int(search_radius/ dist_bw_points) 
 
         print(vertex)
@@ -192,11 +199,32 @@ class curr_user():
             if hs.haversine(origin_loc,new_lon) <= search_radius and new_lon not in nearby_locs:
                 count += 1
                 nearby_locs.append({'lat':new_lon[0], 'lng':new_lon[1], 'label':f'Marker {count}'})
+        '''
+
         #if search_radius == 8.04672:
             #nearby_locs.pop(5)
         #else:
             #nearby_locs.pop(4)
+
+        all_points = inner_circle + outer_circle
+        nearby_locs.append({'lat':lat,'lng':lon,'label':'Marker 0'})
+        for i, point in enumerate(all_points):
+            point["label"] = f'Marker {i+1}'
+            nearby_locs.append(point)
         return nearby_locs
+
+    def generate_circle_points(self, lat,lng,radius, num_points):
+        points=[]
+        for i in range(num_points):
+            angle = 2 * math.pi * i / num_points
+            dx = radius * math.cos(angle)
+            dy = radius * math.sin(angle)
+            delta_lat = dy/111.32
+            delta_lng = dx/(111.32 * math.cos(math.radians(lat)))
+            new_lat = round(lat + delta_lat, 6)
+            new_lng = round(lng + delta_lng, 6)
+            points.append({'lat':new_lat,'lng':new_lng})
+        return points
 
 # score calculation/optimal for star gazing or not?            
 class score1():

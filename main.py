@@ -124,6 +124,7 @@ def learn_more():
 
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
+    zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     form = LocationForm()
     api_key = os.environ.get('GOOGLE_KEY') 
     msg = None
@@ -171,10 +172,11 @@ def find_stars():
         optimal_locs = session.pop('optimal_locs', [])
         if optimal_locs == []:
            msg = "We did not find any suitable places for star gazing in your area"
-        return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = cur_usr.coords,markers=optimal_locs,msg=msg)
+        else:
+            zoom_coords = optimal_locs[0] 
+        return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=optimal_locs,msg=msg)
 
 @app.route("/results/<rating>/<light_rating>/<lunar_phase>",methods=['GET','POST'])
-@login_required
 def results(rating,light_rating,lunar_phase):
     weather_report = session.get("weather_report", [])
     point = session.get("location", [])
