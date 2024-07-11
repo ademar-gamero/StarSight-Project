@@ -7,14 +7,14 @@
     <!-- Link to Bootstrap CSS for styling -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body{
+        body {
             display: flex;
             height: 100vh;
             margin: 0;
         }
-        h1{
-            margin-bottom: 300px;
-            margin-left: 750px;
+        h2{
+            margin-bottom: 100px;
+            color: rebeccapurple;
         }
         .left-half{
             flex: 1;
@@ -31,20 +31,26 @@
             background-color: white;
         }
         .login-container{
-            max-width: 400px;
+            max-width: 350px; /* Adjust the max-width to make it wider */
+            width: 100%; /* Make the container responsive */
+            height: 500px;
             padding: 20px;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: -50px; /* Adjust as necessary to move it up */
+        }
+        .mb-3:first-of-type {
+            margin-top: 80px; /* Increase this value to add more space */
         }
 
     </style>
 </head>
 <body>
     <div class="left-half"></div>
+
     <div class="right-half">
         <div class="login-container">
-            <h2 class="text-center mb-4">Login</h2>
+            <h2 class="text-center mb-4">Login to StarSight</h2>
             <form action="{{ url_for('login') }}" method="POST">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
@@ -56,7 +62,7 @@
                     <input type="password" class="form-control" id="password" name="password" required>
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100">Login</button>
+                <button type="submit" class="btn btn-dark w-100">Login</button>
             </form>
         </div>
     </div>
