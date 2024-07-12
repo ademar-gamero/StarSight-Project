@@ -5,14 +5,6 @@ from weather_api import WeatherAPI
 import requests
 from unittest.mock import patch
 import sys
-from main import app, db
-import git
-import ast
-import json
-from flask import Flask, render_template, url_for, flash, redirect, request, session
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
-from flask_sqlalchemy import SQLAlchemy
-#wont need all imports
 
 class testDB(unittest.TestCase):
     #TSET FOR DB
@@ -141,7 +133,7 @@ class BasicTests(unittest.TestCase):
         lunar_phase_str = lunar_phase.replace(' ', '%20')
         response = self.app.get(f'/{lat_str}/{long_str}/results', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-    
+    d
     #login and registration checks
     def register(): 
         username = None
@@ -149,7 +141,7 @@ class BasicTests(unittest.TestCase):
         form = RegistrationForm()
 
         if form.validate_on_submit():
-             hashed_password = None
+            hashed_password = None
             if form.password.data != None:
                 hashed_password = generate_password_hash(form.password.data)
             new_user = User(username=form.username.data, email=None, password=hashed_password)
