@@ -1,4 +1,5 @@
 {% extends "basic_layout.html" %}
+
 {% block content %}
     <body style="background-color: black"></body>
     <div class="bg-animation">
@@ -7,6 +8,18 @@
         <div id="stars3"></div>
     </div>
     <h1>Saved Locations</h1>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
     <table>
         <tr>
             <th>ID</th>
