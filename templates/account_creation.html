@@ -12,7 +12,9 @@
             height: 100vh;
             justify-content: center;
             align-items: center;
-            background-image: linear-gradient(120deg, #AE66FF, #f7eff6);
+            background-image: url({{ url_for('static', filename='/images/acc-create-background-4.jpg') }});
+            background-repeat: no-repeat;
+            background-position: center;
             background-size: cover;
             margin: 0;
             text-align: center;
@@ -24,12 +26,15 @@
             max-width: 350px; /* Adjust the max-width to make it wider */
             width: 100%; /* Make the container responsive */
             padding: 20px;
-            background: white;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            background: lightgray;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3); /* Make the shadow more visible */
             margin-top: 20px; /* Adds top margin to push the fields down */
+            margin-left: 470px;
+            border-radius: 15px;
         }
         h1 {
-            color: rebeccapurple;
+            margin-top: -50px;
+            color: lavender;
         }
     </style>
 </head>
@@ -44,12 +49,12 @@
                     {{ form.hidden_tag() }}
 
                     <div class="mb-3 form-group-margin">
-                        {{ form.username.label(class="form-label") }}
+                        <b>{{ form.username.label(class="form-label") }}</b>
                         {{ form.username(class="form-control") }}
                     </div>
 
                     <div class="mb-3 form-group-margin">
-                        {{ form.password.label(class="form-label") }}
+                        <b>{{ form.password.label(class="form-label") }}</b>
                         {{ form.password(class="form-control") }}
                     </div>
 
