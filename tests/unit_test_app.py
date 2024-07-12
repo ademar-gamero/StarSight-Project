@@ -18,8 +18,18 @@ class BasicTests(unittest.TestCase):
 
     # executed prior to each test
     def setUp(self):
-        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ntest.db'
         db = SQLAlchemy(app)
+        login_manager = LoginManager(app)
+        login_manager.login_view = 'login'
+
+        cur_usr = curr_user()
+        sec = secrets.token_urlsafe(16)
+        app.secret_key = sec
+
+        secret = secrets.token_urlsafe(16)
+        app.config['SECRET_KEY'] = secret
+
         self.app = app.test_client()
         with app.app_context():
             db.drop_all()
