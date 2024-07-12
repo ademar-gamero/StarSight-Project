@@ -177,12 +177,19 @@ class curr_user():
         lon = float(origin_loc[1])
         origin_loc = (lat,lon)
         dist_bw_points = self.guide[search_radius] 
-
+        points_to_generate = 5
+        if search_radius == 8.04672:
+            points_to_generate = 5
+        elif search_radius == 16.0934:
+            points_to_generate = 10
+        else:
+            points_to_generate = 10
+        
         inner_radius = dist_bw_points
-        inner_circle = self.generate_circle_points(lat, lon, inner_radius, 5)
+        inner_circle = self.generate_circle_points(lat, lon, inner_radius, points_to_generate)
         
         outer_radius = 2 * dist_bw_points
-        outer_circle = self.generate_circle_points(lat, lon, outer_radius, 5)
+        outer_circle = self.generate_circle_points(lat, lon, outer_radius, points_to_generate)
         '''
         vertex = int(search_radius/ dist_bw_points) 
 

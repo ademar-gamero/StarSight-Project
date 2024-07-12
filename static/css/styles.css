@@ -3,7 +3,7 @@ body {
     color: #fff; /* Optional: to make text color white for contrast */
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    overflow: auto;
 }
 
 table {

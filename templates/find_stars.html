@@ -2,12 +2,23 @@
 {% block content %}
   <style>
   #map{
-    height: 400px;
+    height: 600px;
     width: 100%;
   } 
+    body {
+      background-image: url({{ url_for('static', filename='/images/Star-background.jpg') }});
+      background-size:cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .white-label{
+      color: white; 
+    }
+
   </style>
   
-  <h2> Find Stars! </h2>
+  <h2 style="text-align:center; color: white;"> Find Stars! </h2>
   <div class="form-section">
     <form action = "" method="POST">
       
@@ -15,13 +26,14 @@
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key={{map_api_key}}&callback=initMap">
   </script>    
+  <body>
   <form id="LocationForm">
         {{ form.hidden_tag() }}
-        {{ form.loc_radius.label }}
+        {{ form.loc_radius.label(class="white-label")}}
         {{ form.loc_radius }}
-        <label for="lat">Latitude:</label>
+        <label style="color: white" for="lat">Latitude:</label>
         <input type="number" step="any" id="lat" name="lat">
-        <label for="lng">Longitude:</label>
+        <label style="color: white" for="lng">Longitude:</label>
         <input type="number" step="any" id="lng" name="lng">
         <input type="submit" value="Find nearby locations!">
     </form>
@@ -46,9 +58,19 @@
       <input type="submit" value="View Forecast">
     {% endif %}
   </form>
-    {% if msg != None %}
-      {{msg}}
-    {% endif %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+          <div class="container mt-4">
+              {% for category, message in messages %}
+                  <div class="alert alert-light alert-dismissible fade show" role="alert">
+                      {{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+              {% endfor %}
+          </div>
+      {% endif %}
+  {% endwith %}
+  </body>
     <script>
         let map;
         let markers = [];

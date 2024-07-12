@@ -1,4 +1,4 @@
-from distance import DB,CityAPI,score,curr_user 
+from distance import DB,CityAPI,score1,curr_user 
 from weather_api import WeatherAPI
 import sys
 
@@ -12,7 +12,7 @@ location_longitude = None
 resp = None
 while resp != "q":
     cur_usr = curr_user()
-    score_obj = score()
+    score_obj = score1()
     location_latitude = None
     location_longitude = None
     print("***************************************")

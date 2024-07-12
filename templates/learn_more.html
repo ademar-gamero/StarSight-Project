@@ -1,0 +1,20 @@
+{% extends "basic_layout.html" %}
+{% block content %}
+  <style>
+    body {
+      background-image: url({{ url_for('static', filename='/images/stars.jpeg')}});
+      background-size:cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      color: white;
+    }
+  </style>
+  <body>
+    <h1> StarSight Explained </h1>
+    <h2>The StarSight forecast is determined on a 5 point scale</h2>
+    <h2> Various factors determine the outcome of the final score
+    weather and light pollution are taken into account, with other factors being factored soon </h2>
+     
+  </body>
+{% endblock %}
