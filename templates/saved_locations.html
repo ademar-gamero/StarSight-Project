@@ -1,73 +1,28 @@
 {% extends "basic_layout.html" %}
 {% block content %}
-<html>
-    <style>
-        body {
-            background: url('will_add_background.jpeg') no-repeat center center fixed;
-            background-size: cover;
-            color: #fff;
-            font-family: Arial, sans-serif;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            background: rgba(255, 255, 255, 0.8);
-            color: #000;
-        }
-
-        th, td {
-            padding: 12px;
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            text-align: left;
-        }
-
-        th {
-            background-color: rgba(200, 200, 255, 0.9);
-            color: #000;
-        }
-
-        tr:hover {
-            background-color: rgba(230, 230, 255, 0.8);
-        }
-
-        h1 {
-            text-align: center;
-            margin: 20px 0;
-            color: #fff;
-            text-shadow: 2px 2px 5px #000;
-        }
-
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
-
+    <body style="background-color: black"></body>
+    <div class="bg-animation">
+        <div id="stars"></div>
+        <div id="stars2"></div>
+        <div id="stars3"></div>
+    </div>
     <h1>Saved Locations</h1>
     <table>
-            <tr>
-                <th>ID</th>
-                <th>Location Name</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Actions</th>
-            </tr>
-            {% for location in locations %}
-                <tr>
-                    <td>{{ location.id }}</td>
-                    <td>{{ location.name }}</td>
-                    <td>{{ location.latitude }}</td>
-                    <td>{{ location.longitude }}</td>
-                    <td><a href="/{{ location.latitude }}/{{location.longitude}}/results">View Results</a></td>
-                </tr>
-            {% endfor %}
-
+        <tr>
+            <th>ID</th>
+            <th>Location Name</th>
+            <th>Latitude</th>
+            <th>Longitude</th>
+            <th>Actions</th>
+        </tr>
+        {% for location in locations %}
+        <tr>
+            <td>{{ location.id }}</td>
+            <td>{{ location.name }}</td>
+            <td>{{ location.latitude }}</td>
+            <td>{{ location.longitude }}</td>
+            <td><a href="/{{ location.latitude }}/{{location.longitude}}/results">View Results</a></td>
+        </tr>
+        {% endfor %}
     </table>
-</html>
 {% endblock %}
