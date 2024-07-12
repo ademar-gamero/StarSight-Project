@@ -1,10 +1,15 @@
+#StarSight-Project/astronomy-api.py
 import git
 import ast
 import json
 from flask import Flask, render_template, url_for, flash, redirect, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
-from main import app, db
+import sys
+import unittest
+import sqlite3
+
+app = Flask(__name__)
 
 sys.path.append('../StarSight-Project') # imports python file from parent directory
 
@@ -14,6 +19,7 @@ class BasicTests(unittest.TestCase):
     # executed prior to each test
     def setUp(self):
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
+        db = SQLAlchemy(app)
         self.app = app.test_client()
         with app.app_context():
             db.drop_all()
@@ -23,6 +29,10 @@ class BasicTests(unittest.TestCase):
         db.session.add(self.test_user)
         db.session.commit()
 
+    def tearDown(self):
+        db.session.remove()
+        db.drop_all()
+        
     ###############
     #### tests ####
     ###############
@@ -53,7 +63,7 @@ class BasicTests(unittest.TestCase):
         lunar_phase_str = lunar_phase.replace(' ', '%20')
         response = self.app.get(f'/{lat_str}/{long_str}/results', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-    d
+
     #login and registration checks
     def register(): 
         username = None

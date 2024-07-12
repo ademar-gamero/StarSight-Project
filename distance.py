@@ -199,7 +199,7 @@ class curr_user():
         return nearby_locs
 
 # score calculation/optimal for star gazing or not?            
-class score1():
+class score():
     def __init__(self):
         self.score = 5
         self.light_pollution = 5
