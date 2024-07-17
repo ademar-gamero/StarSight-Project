@@ -41,7 +41,9 @@ class User(db.Model, UserMixin):
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), unique=False, nullable=False)
+    name = db.Column(db.String(30), unique=False, nullable=True)
+    rating = db.Column(db.Numeric(4, 7), unique=True, nullable=True)
+    reviewers = db.Column(db.Integer, unique=False, nullable=True)
     state = db.Column(db.String(20), unique=False, nullable=True)
     county = db.Column(db.String(20), unique=False, nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
