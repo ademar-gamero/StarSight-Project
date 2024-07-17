@@ -41,7 +41,9 @@ class User(db.Model, UserMixin):
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), unique=False, nullable=False)
+    name = db.Column(db.String(30), unique=False, nullable=True)
+    rating = db.Column(db.Numeric(4, 7), unique=True, nullable=True)
+    reviewers = db.Column(db.Integer, unique=False, nullable=True)
     state = db.Column(db.String(20), unique=False, nullable=True)
     county = db.Column(db.String(20), unique=False, nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
@@ -124,6 +126,7 @@ def learn_more():
 
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
+    
     if len(cur_usr.coords) != 0:
         zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     else:
@@ -173,7 +176,7 @@ def find_stars():
                                     'lunar_phase':lunar_phase})
        session['optimal_locs'] = optimal_locs
        if optimal_locs == []:
-           flash("We didnt find any suitable locations for viewing stars nearby")
+           flash("We didnt find any suitable locations for viewing stars nearby, consider making your radius bigger")
        return redirect(url_for("find_stars"))
     else:
         optimal_locs = session.get('optimal_locs', [])
