@@ -124,6 +124,7 @@ def learn_more():
 
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
+    
     if len(cur_usr.coords) != 0:
         zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     else:
@@ -173,7 +174,7 @@ def find_stars():
                                     'lunar_phase':lunar_phase})
        session['optimal_locs'] = optimal_locs
        if optimal_locs == []:
-           flash("We didnt find any suitable locations for viewing stars nearby")
+           flash("We didnt find any suitable locations for viewing stars nearby, consider making your radius bigger")
        return redirect(url_for("find_stars"))
     else:
         optimal_locs = session.get('optimal_locs', [])
