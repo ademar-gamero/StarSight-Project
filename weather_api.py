@@ -12,6 +12,9 @@ class WeatherAPI:
         else:
             return 3
 
+    def lunar_phase_deduction(lunar_phase):
+        if lunar_phase == ""
+
 
     # calculates and returns average percentage of cloud coverage
     def get_weather_score(response):
@@ -53,6 +56,20 @@ class WeatherAPI:
 
         # left in case of incorporation
         # moon_illumination = response['forecast']['forecastday'][0]['astro']['moon_illumination']
+
+    def return_moon_illumination(response):
+        moon_illumination = response['forecast']['forecastday'][0]['astro']['moon_illumination']
+        return moon_illumination
+
+    def calculate_moon_deduction(moon_illum):
+        if 75 > moon_illum > 45:
+            return 1
+        elif moon_illum >= 75:
+            return 2
+        elif moon_illum < 45:
+            return 0
+
+
     
     def return_moon_phase(response):
         moon_phase = response['forecast']['forecastday'][0]['astro']['moon_phase'] 

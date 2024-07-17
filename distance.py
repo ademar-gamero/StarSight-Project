@@ -77,7 +77,7 @@ class CityAPI():
                     response1 = requests.get(api_url, headers={'X-Api-Key':os.environ.get('NINJA_KEY')})
                     dict2 = json.loads(response1.text)
                     if dict2 == []:
-                        return
+                        continue
                     pop = dict2[0]["population"]
                     if 50000 <= pop <= 100000:
                         score_obj.lower_score(1)
@@ -89,6 +89,17 @@ class CityAPI():
                         score_obj.light_pollution -= 3
                         if score_obj.light_pollution < 0:
                             score_obj.light_pollution = 0
+
+    def calculate_elevation(self, score_obj):
+        response = requests.get(f"https://api.open-meteo.com/v1/elevation?latitude={self.location_latitude}&longitude={self.location_longitude}")
+        elevation = None
+        elev_dict = json.loads(response.text)
+        elevation = elev_dict["elevation"]
+        if 5000 > elevation >= 3000:
+            score_obj.increase_score(1)
+        elif elevation >= 5000:
+            score_obj.increase_score(2)
+
 
 class curr_user():
     def __init__(self):
@@ -238,6 +249,7 @@ class score1():
     def __init__(self):
         self.score = 5
         self.light_pollution = 5
+        self.moon_light_pollution = 2
         self.score_card = {0:"NOT OPTIMAL-Stars will not be visible",
             1:"NOT OPTIMAL - Stars will not be visible",
             2:"NOT OPTIMAL - Stars will not be visible",
@@ -250,10 +262,17 @@ class score1():
             3:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
             4:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
             5:"NO LIGHT POLLUTION - no cities within 20 miles"}
+        self.moon_light_pollution_card = {0:"Moon light maximal, illuminated above 75% ",
+                                          1:"Moon light moderate, illuminated above 45% ",
+                                          2:"Moon light minimal, or not existent"}
     def lower_score(self,val):
         self.score = self.score - val
         if self.score < 0:
             self.score = 0
+    def increase_score(self,val):
+        self.score = self.score + val
+        if self.score > 5:
+            self.score = 5
     def return_current_score(self):
         return self.score
     def print_current_score(self):
