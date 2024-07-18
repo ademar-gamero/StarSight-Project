@@ -1,6 +1,11 @@
 import git
 import ast
 import json
+
+import asyncio
+import aiohttp
+import nest_asyncio
+
 from flask import Flask, render_template, url_for, flash, redirect, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
@@ -13,6 +18,7 @@ import secrets
 import os
 
 
+nest_asyncio.apply()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
@@ -124,9 +130,31 @@ def register():
 def learn_more():
     return render_template("learn_more.html")
 
+#helper method to process a location
+async def process_loc(loc):
+    loc_score = score1()
+    city = CityAPI(loc["lat"],loc["lng"])
+    local = await city.get_nearby_cities()
+    await city.city_calculate(loc_score,local)
+    await city.calculate_elevation(loc_score)
+    weather_response = WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
+    moon_illum = WeatherAPI.return_moon_illumination(weather_response)
+    moon_deduction = WeatherAPI.calculate_moon_deduction(moon_illum)
+    weather_deduction = WeatherAPI.get_weather_score(weather_response)
+    loc_score.lower_score(weather_deduction)
+    loc_score.moon_light_pollution -= moon_deduction
+    print(loc_score.score)
+    if loc_score.score >= 2:
+       weather_rep = WeatherAPI.return_weather_report(weather_response)
+       lunar_phase = WeatherAPI.return_moon_phase(weather_response)
+       optimal_loc = ({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),'ranking_score':loc_score.score,
+                            'light_ranking':loc_score.return_current_light_pollution_str(), 'weather_report':weather_rep,
+                            'lunar_phase':lunar_phase, 'lunar_impact':loc_score.moon_light_pollution_card[loc_score.moon_light_pollution]})
+       return optimal_loc
+    return None
+
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
-    
     if len(cur_usr.coords) != 0:
         zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     else:
@@ -149,7 +177,8 @@ def find_stars():
            session["weather_report"] = weather_report
            session["location"] = point
            l_phase = v_processed["lunar_phase"]
-           return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase))
+           l_score = v_processed["lunar_impact"]
+           return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase,lunar_impact=l_score))
        session.pop("optimal_locs",[])
        search_radius = form.loc_radius.data
        lat = request.form.get('lat')
@@ -157,23 +186,38 @@ def find_stars():
        if lat == '' or lng == '':
         flash("Please select a location from the interactive map or enter a valid latitude/longitude manually")
         return render_template("find_stars.html", form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=[])
+
        origin = (lat,lng)
        nearby_locs = cur_usr.calculate_nearby_locs([], origin, search_radius)
        optimal_locs = []
+       loop = asyncio.get_event_loop()
+       processes = [process_loc(loc) for loc in nearby_locs]
+       results = loop.run_until_complete(asyncio.gather(*processes))
+       optimal_locs = [result for result in results if result is not None]
+       '''
        for loc in nearby_locs:
+           
+           
            loc_score = score1()
            city = CityAPI(loc["lat"],loc["lng"])
            local = city.get_nearby_cities()
            city.city_calculate(loc_score,local)
+           city.calculate_elevation(loc_score)
            weather_response = WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
+           moon_illum = WeatherAPI.return_moon_illumination(weather_response)
+           moon_deduction = WeatherAPI.calculate_moon_deduction(moon_illum)
            weather_deduction = WeatherAPI.get_weather_score(weather_response)
            loc_score.lower_score(weather_deduction)
-           if loc_score.score >= 3:
+           loc_score.moon_light_pollution -= moon_deduction
+           print(loc_score.score)
+           if loc_score.score >= 2:
                weather_rep = WeatherAPI.return_weather_report(weather_response)
                lunar_phase = WeatherAPI.return_moon_phase(weather_response)
-               optimal_locs.append({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),
+               optimal_locs.append({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),'ranking_score':loc_score.score,
                                     'light_ranking':loc_score.return_current_light_pollution_str(), 'weather_report':weather_rep,
-                                    'lunar_phase':lunar_phase})
+                                    'lunar_phase':lunar_phase, 'lunar_impact':loc_score.moon_light_pollution_card[loc_score.moon_light_pollution]})
+            '''
+
        session['optimal_locs'] = optimal_locs
        if optimal_locs == []:
            flash("We didnt find any suitable locations for viewing stars nearby, consider making your radius bigger")
@@ -184,10 +228,13 @@ def find_stars():
             pass
         else:
             zoom_coords = optimal_locs[0] 
+        #sort/rank
+
+
         return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=optimal_locs)
 
-@app.route("/results/<rating>/<light_rating>/<lunar_phase>",methods=['GET','POST'])
-def results(rating,light_rating,lunar_phase):
+@app.route("/results/<rating>/<light_rating>/<lunar_phase>/<lunar_impact>",methods=['GET','POST'])
+def results(rating,light_rating,lunar_phase,lunar_impact):
     weather_report = session.get("weather_report", [])
     point = session.get("location", [])
     if request.method == "POST":
@@ -203,7 +250,7 @@ def results(rating,light_rating,lunar_phase):
             if str(loc_lat) == lat and str(loc_lng) == lng:
                 flash("This location is already saved in the database, error")
                 return render_template("results.html",rating=rating,light_rating=light_rating,weather_report=weather_report,lunar_phase=lunar_phase,
-                           point=point)
+                           point=point,lunar_impact=lunar_impact)
         name = request.form.get("name")
         if lat and lng and name:
             lat = float(lat)
@@ -212,7 +259,8 @@ def results(rating,light_rating,lunar_phase):
             db.session.add(new_loc)
             db.session.commit()
         flash("Location Saved successfully")
-    return render_template("results.html",rating=rating,light_rating=light_rating, weather_report=weather_report,lunar_phase=lunar_phase,point=point)
+    return render_template("results.html",rating=rating,light_rating=light_rating, 
+                           weather_report=weather_report,lunar_phase=lunar_phase,point=point,lunar_impact = lunar_impact)
          
 @app.route("/update_server", methods=['POST'])
 def webhook():

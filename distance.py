@@ -5,7 +5,11 @@ import os
 import geocoder
 import haversine as hs
 import math
+import asyncio
+import aiohttp
+import nest_asyncio
 from math import asin, atan2, cos, degrees, radians, sin
+nest_asyncio.apply()
 
 class DB():
     def __init__(self, db_name):
@@ -58,43 +62,48 @@ class CityAPI():
         self.location_longitude = longitude
         self.radius = 20
 
-    def get_nearby_cities(self):
-        response = requests.get(f"http://getnearbycities.geobytes.com/GetNearbyCities?radius={self.radius}&latitude={self.location_latitude}&longitude={self            .location_longitude}")
-        city_list = json.loads(response.text) 
+    async def get_nearby_cities(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"http://getnearbycities.geobytes.com/GetNearbyCities?radius={self.radius}&latitude={self.location_latitude}&longitude={self.location_longitude}") as response:
+                city_list = await response.json()
         return city_list
 
-    def city_calculate(self, score_obj, city_list):
+    async def city_calculate(self, score_obj, city_list):
         if len(city_list) > 5:
             score_obj.lower_score(3)
             score_obj.light_pollution = 0
         else:
             if len(city_list[0]) > 0:
-                for element in city_list:
-                    name = element[1]
-                    longitude = element[10]  
-                    latitude = element[8]
-                    api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
-                    response1 = requests.get(api_url, headers={'X-Api-Key':os.environ.get('NINJA_KEY')})
-                    dict2 = json.loads(response1.text)
-                    if dict2 == []:
-                        continue
-                    pop = dict2[0]["population"]
-                    if 50000 <= pop <= 100000:
-                        score_obj.lower_score(1)
-                        score_obj.light_pollution -= 1
-                        if score_obj.light_pollution < 0:
-                            score_obj.light_pollution = 0
-                    elif pop >= 100000:
-                        score_obj.lower_score(3)
-                        score_obj.light_pollution -= 3
-                        if score_obj.light_pollution < 0:
-                            score_obj.light_pollution = 0
+                async with aiohttp.ClientSession() as session:
+                    for element in city_list:
+                        print("current score")
+                        print(score_obj.score)
+                        name = element[1]
+                        api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
+                        async with session.get(api_url, headers={'X-Api-Key':os.environ.get('NINJA_KEY')}) as response:
+                            dict2 = await response.json()
+                        if dict2 == []:
+                            continue
+                        pop = dict2[0]["population"]
+                        if 50000 <= pop <= 100000:
+                            score_obj.lower_score(1)
+                            score_obj.light_pollution -= 1
+                            if score_obj.light_pollution < 0:
+                                score_obj.light_pollution = 0
+                        elif pop >= 100000:
+                            score_obj.lower_score(3)
+                            score_obj.light_pollution -= 3
+                            if score_obj.light_pollution < 0:
+                                score_obj.light_pollution = 0
 
-    def calculate_elevation(self, score_obj):
-        response = requests.get(f"https://api.open-meteo.com/v1/elevation?latitude={self.location_latitude}&longitude={self.location_longitude}")
+    async def calculate_elevation(self, score_obj):
         elevation = None
-        elev_dict = json.loads(response.text)
-        elevation = elev_dict["elevation"]
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://api.open-meteo.com/v1/elevation?latitude={self.location_latitude}&longitude={self.location_longitude}") as response:
+                elev_dict = await response.json()
+        elevation = elev_dict["elevation"][0]
+        print("elevation:")
+        print(elevation)
         if 5000 > elevation >= 3000:
             score_obj.increase_score(1)
         elif elevation >= 5000:
@@ -252,13 +261,13 @@ class score1():
         self.moon_light_pollution = 2
         self.score_card = {0:"NOT OPTIMAL-Stars will not be visible",
             1:"NOT OPTIMAL - Stars will not be visible",
-            2:"NOT OPTIMAL - Stars will not be visible",
+            2:"SUB OPTIMAL - Stars may be visible",
             3:"SUB OPTIMAL - Stars may be visible",
-            4:"SUB OPTIMAL - Stars may be visible",
-            5:"OPTIMAL - Stars will be visible"}
+            4:"OPTIMAL - Stars will be visible",
+            5:"OPTIMAL - Stars and other celestial bodies will be visible"}
         self.light_pollution_card = {0:"HIGH LIGHT POLLUTION - large cities within 20 miles",
             1:"HIGH LIGHT POLLUTION - large cities within 20 miles",
-            2:"HIGH LIGHT POLLUTION - large cities within 20 miles",
+            2:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
             3:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
             4:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
             5:"NO LIGHT POLLUTION - no cities within 20 miles"}
