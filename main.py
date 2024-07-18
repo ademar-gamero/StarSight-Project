@@ -11,6 +11,7 @@ from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
 import secrets
 import os
+import datetime
 
 
 
@@ -51,6 +52,16 @@ class Location(db.Model):
 
     def __repr__(self):
         return f"Location('{self.id},'{self.latitude}',{self.longitude})"
+    
+
+class Review(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    stars = db.Column(db.Integer, nullable=False)
+    comments = db.Column(db.text, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    # foreign keys to reference users and locations
+    location_id = db.Column(db.Integer, db.ForeignKey('location.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 
 password = generate_password_hash("password")
