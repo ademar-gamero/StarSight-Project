@@ -193,6 +193,7 @@ def find_stars():
        loop = asyncio.get_event_loop()
        processes = [process_loc(loc) for loc in nearby_locs]
        results = loop.run_until_complete(asyncio.gather(*processes))
+       print(results)
        optimal_locs = [result for result in results if result is not None]
        '''
        for loc in nearby_locs:
@@ -295,6 +296,15 @@ def saved_locations_page():
 def calculate_results(latitude, longitude):
     loc = (latitude,longitude)
     session["location"] = loc
+    result = asyncio.run(process_loc(loc))
+    if result is None:
+        flash("Entry was not found")
+        return redirect(url_for("saved_locations_page"))
+    ranking = result["ranking"]
+    light_ranking = result["light_ranking"]
+    lunar_phase = result["lunar_phase"]
+    session["weather_report"] = result["weather_report"]
+    '''
     loc_score = score1()
     city = CityAPI(latitude,longitude)
     local = city.get_nearby_cities()
@@ -307,6 +317,7 @@ def calculate_results(latitude, longitude):
     lunar_phase = WeatherAPI.return_moon_phase(weather_response)
     ranking = loc_score.return_current_score_str()
     light_ranking = loc_score.return_current_light_pollution_str()
+    '''
     return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase))
     #basically sends a POST request for database
     #if successful we send the data into the html file
