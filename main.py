@@ -64,7 +64,7 @@ class Reviews(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
 
-password = generate_password_hash("password")
+# password = generate_password_hash("password")
 
 with app.app_context():
     db.create_all()
@@ -292,4 +292,4 @@ def submit_review():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True)
