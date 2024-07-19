@@ -67,6 +67,9 @@ class Constellation(db.Model):
     description = db.Column(Text, nullable=False)
     img = db.Column(db.String(80), unique=True, nullable=False)
 
+    def __repr__(self):
+        return f"Constellation({self.name})"
+
 
 password = generate_password_hash("password")
 
