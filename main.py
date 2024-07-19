@@ -64,17 +64,32 @@ class Location(db.Model):
 class Constellation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=False, nullable=False)
-    description = db.Column(Text, nullable=False)
+    description = db.Column(db.text, nullable=False)
     img = db.Column(db.String(80), unique=True, nullable=False)
 
     def __repr__(self):
         return f"Constellation({self.name})"
 
 
-password = generate_password_hash("password")
+def populate_constellations_table():
+    constellations = [
+                {   
+                "name":"Orion",
+                "description": "Orion is a prominent set of stars most visible during winter in the northern celestial hemisphere. It is one of the 88 modern constellations; it was among the 48 constellations listed by the 2nd-century astronomer Ptolemy. It is named for a hunter in Greek mythology.",
+                "img":"orion.jpg"
+                },
+            ]
+    for entry in constellations:
+        constellation = Constellation(name=entry["name"],description=entry["description"],img=entry["img"])
+        db.session.add(constellation)
+    db.session.commit()
 
 with app.app_context():
     db.create_all()
+    if Constellation.query.first() is None:
+        populate_constellations_table()
+
+
 
 @login_manager.user_loader
 def load_user_from_db(user_id):

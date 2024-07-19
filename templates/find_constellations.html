@@ -1,0 +1,16 @@
+{% extends "basic_layout.html" %}
+{% block content %}
+<style>
+  img {
+    float: left;
+  }
+</style
+  <body>
+    <h1> Constellations! </h1>
+    {%for constellation in constellations%}
+      <h4>{{constellation["name"]}}</h4>
+      <img src={{ url_for('static', filename = 'images/constellations/{constellion["img"]}')}} width="30" height="30" alt="Orion" border="0"> 
+      <p>{{constellation["description"]}}</p>
+    {% endfor %}
+  </body>
+{% endblock %}
