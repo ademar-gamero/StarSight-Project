@@ -291,18 +291,27 @@ def friends():
                 flash('Friend request already exists!', 'danger')
         else:
             flash('User not found or trying to friend yourself.', 'danger')
+
     pending_requests = Friend.query.filter_by(friend_id=current_user.id, status='pending').all()
-    friends = Friend.query.filter_by(user_id=current_user.id, status='accepted').all()
+
+    # Fetching friends in both directions
+    friends = db.session.query(User).filter(
+        (User.id == Friend.friend_id) & (Friend.user_id == current_user.id) & (Friend.status == 'accepted') |
+        (User.id == Friend.user_id) & (Friend.friend_id == current_user.id) & (Friend.status == 'accepted')
+    ).distinct().all()
+
     pending_user_requests = [(User.query.get(req.user_id), req) for req in pending_requests]
-    return render_template('friends.html', form=form, pending_requests=pending_requests, friends=friends,
+    return render_template('friends.html', form=form, friends=friends,
                            pending_user_requests=pending_user_requests)
 
 @app.route('/accept_friend/<int:friend_id>')
 @login_required
 def accept_friend(friend_id):
     friend_requests = Friend.query.filter_by(user_id=friend_id, friend_id=current_user.id, status='pending').first()
+    current_user_req = Friend.query.filter_by(user_id=current_user.id, friend_id=friend_id, status='pending').first()
     if friend_requests:
         friend_requests.status = 'accepted'
+        current_user_req.status = 'accepted'
         db.session.commit()
         flash('Friend request accepted!', 'success')
     return redirect(url_for('friends'))
@@ -311,8 +320,10 @@ def accept_friend(friend_id):
 @login_required
 def decline_friend(friend_id):
     friend_request = Friend.query.filter_by(user_id=friend_id, friend_id=current_user.id, status='pending').first()
+    current_user_req = Friend.query.filter_by(user_id=current_user.id, friend_id=friend_id, status='pending').first()
     if friend_request:
         friend_request.status = 'declined'
+        current_user_req.status = 'declined'
         db.session.commit()
         flash('Friend request declined.', 'success')
         #this pops up on log in page, after logging out
