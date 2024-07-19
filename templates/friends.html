@@ -1,0 +1,50 @@
+{% extends "basic_layout.html" %}
+
+{% block content %}
+<h1>Friends</h1>
+
+<!-- Section to Display Pending Friend Requests -->
+<section id="pending-requests">
+    <h2>Pending Friend Requests</h2>
+    <ul class="list-group">
+        {% for user, request in pending_user_requests %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                {{ user.username }}
+                <span>
+                    <a href="{{ url_for('accept_friend', friend_id=request.user_id) }}" class="btn btn-success btn-sm">Accept</a>
+                    <a href="{{ url_for('decline_friend', friend_id=request.user_id) }}" class="btn btn-danger btn-sm">Decline</a>
+                </span>
+            </li>
+        {% endfor %}
+    </ul>
+</section>
+
+<!-- Section to Display Current Friends -->
+<section id="friends-list">
+    <h2>Your Friends</h2>
+    <ul class="list-group">
+        {% for friend in friends %}
+            {% if friend.user_id == current_user.id %}
+                <li class="list-group-item">{{ friend.friend.username }}</li>
+            {% else %}
+                <li class="list-group-item">{{ friend.user.username }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</section>
+
+<!-- Section to Add a Friend -->
+<section id="add-friend">
+    <h2>Add a Friend</h2>
+    <form method="POST" action="{{ url_for('friends') }}">
+        {{ form.hidden_tag() }}
+        <div class="mb-3">
+            {{ form.friend_username.label }} {{ form.friend_username(class="form-control") }}
+        </div>
+        <div class="mb-3">
+            {{ form.submit(class="btn btn-primary") }}
+        </div>
+    </form>
+</section>
+
+{% endblock %}
