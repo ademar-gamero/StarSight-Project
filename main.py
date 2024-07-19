@@ -54,10 +54,10 @@ class Location(db.Model):
         return f"Location('{self.id},'{self.latitude}',{self.longitude})"
     
 
-class Review(db.Model):
+class Reviews(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    stars = db.Column(db.Integer, nullable=False)
-    comments = db.Column(db.text, nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=False)
     date = db.Column(db.DateTime, default=datetime.today())
     # foreign keys to reference users and locations
     location_id = db.Column(db.Integer, db.ForeignKey('location.id'), nullable=False)
@@ -271,6 +271,25 @@ def calculate_results(latitude, longitude):
     return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase))
     #basically sends a POST request for database
     #if successful we send the data into the html file
+
+
+# reviews code
+# TODO: make reviews dynamic for locations
+@app.route('/reviews')
+def location_reviews():
+    reviews = Reviews.query.all()
+    return render_template('reviews.html', reviews=reviews)
+
+
+@app.route('/submit_review', methods=['POST'])
+def submit_review():
+    rating = int(request.form['rating'])
+    comment = request.form['comment']
+    new_review = Reviews(rating=rating, comment=comment)
+    db.session.add(new_review)
+    db.session.commit()
+    return redirect(url_for('review'))
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
