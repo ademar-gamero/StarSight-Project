@@ -31,13 +31,19 @@ class ConstellationCalculator():
 
         visible_stars = stars[above_horizon_mask]
 
-        visible_constellations = set()
+        visible_constellations = {}
 
         for star in visible_stars.iteruples():
             star_pos = Star(ra_hours=star.ra_hours,dec_degrees=star.dec_degrees)
             constellation = constellation_map(observer.at(time).observe(star_pos).apparent())
             if constellation:
-                visible_constellations.add(constellation)
+                if constellation not in visible_constellations:
+                    visible_constellations[constellation] = 1
+                else:
+                    visible_constellations[constellation] += 1
+        
+        sorted_constellations = dict(sorted(visible_constellations.items(),key=lambda x:x[1], reverse=True))
 
-        return list(visible_constellations)
+
+        return sorted_constellations
         
