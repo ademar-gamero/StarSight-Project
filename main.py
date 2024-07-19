@@ -228,7 +228,6 @@ def find_stars():
             pass
         else:
             zoom_coords = optimal_locs[0] 
-        #sort/rank
 
 
         return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=optimal_locs)
