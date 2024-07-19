@@ -8,12 +8,13 @@ import nest_asyncio
 
 from flask import Flask, render_template, url_for, flash, redirect, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
-from flask_sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy, Text
 from werkzeug.security import generate_password_hash,check_password_hash
 
 from forms import LocationForm, RegistrationForm
 from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
+from constellation import ConstellationCalculator
 import secrets
 import os
 
@@ -59,6 +60,12 @@ class Location(db.Model):
 
     def __repr__(self):
         return f"Location('{self.id},'{self.latitude}',{self.longitude})"
+
+class Constellation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=False, nullable=False)
+    description = db.Column(Text, nullable=False)
+    img = db.Column(db.String(80), unique=True, nullable=False)
 
 
 password = generate_password_hash("password")
@@ -285,12 +292,18 @@ def saved_locations_page():
         flash("You have no saved locations","light")
     return render_template('saved_locations.html', locations=locations)
 
-#implementing later
-#@app.route('/save_location')
-#def save_location():
-    #redirect url after saving location it goes to the saved location saved_locations_page
-    #return redirect(url_for('saved_locations'))
-
+@app.route("/find_constellations/<float:latitude>/<float:longitude>")
+def find_constellations(latitude: float,longitude: float):
+    display_constellations = []
+    loc = (latitude,longitude)
+    calc = ConstellationCalculator(loc)
+    constellations = calc.find_constellations()
+    for constellation in constellations:
+        db_constellation = Constellation.query.filter_by(name=constellation).first()
+        if db_constellation:
+            display_constellations.append({"name":db_constellation.name,"img":db_constellation.img,"description":db_constellation.description})
+    return render_template("find_constellations.html", constellations=display_constellations)
+             
 
 @app.route('/<latitude>/<longitude>/results')
 def calculate_results(latitude, longitude):
