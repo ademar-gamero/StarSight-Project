@@ -23,12 +23,8 @@
 <section id="friends-list">
     <h2>Your Friends</h2>
     <ul class="list-group">
-        {% for friend in friends %}
-            {% if friend.user_id == current_user.id %}
-                <li class="list-group-item">{{ friend.friend.username }}</li>
-            {% else %}
-                <li class="list-group-item">{{ friend.user.username }}</li>
-            {% endif %}
+        {% for user in friends %}
+            <li class="list-group-item">Username: {{ user.username }}</li>
         {% endfor %}
     </ul>
 </section>
