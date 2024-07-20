@@ -79,12 +79,14 @@ class CityAPI():
                         print("current score")
                         print(score_obj.score)
                         name = element[1]
+                        dict2 = {}
                         api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
                         async with session.get(api_url, headers={'X-Api-Key':os.environ.get('NINJA_KEY')}) as response:
                             dict2 = await response.json()
-                        if dict2 == []:
+                        if len(dict2) == 0:
                             continue
-                        pop = dict2[0]["population"]
+                        #pop = dict2[0]["population"]
+                        pop = 0
                         if 50000 <= pop <= 100000:
                             score_obj.lower_score(1)
                             score_obj.light_pollution -= 1
@@ -103,12 +105,18 @@ class CityAPI():
                 elev_dict = await response.json()
         elevation = elev_dict["elevation"][0]
         print("elevation:")
-        print(elevation)
         if 5000 > elevation >= 3000:
             score_obj.increase_score(1)
         elif elevation >= 5000:
             score_obj.increase_score(2)
 
+    async def retrieve_address(self):
+        location_info = None
+        google_key = os.environ.get('GOOGLE_KEY')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"https://maps.googleapis.com/maps/api/geocode/json?latlng={self.location_latitude},{self.location_longitude}&key={google_key}") as response:
+                location_info = await response.json()
+        return location_info
 
 class curr_user():
     def __init__(self):
@@ -261,13 +269,13 @@ class score1():
         self.moon_light_pollution = 2
         self.score_card = {0:"NOT OPTIMAL-Stars will not be visible",
             1:"NOT OPTIMAL - Stars will not be visible",
-            2:"SUB OPTIMAL - Stars may be visible",
+            2:"NOT OPTIMAL - Stars may be visible",
             3:"SUB OPTIMAL - Stars may be visible",
             4:"OPTIMAL - Stars will be visible",
             5:"OPTIMAL - Stars and other celestial bodies will be visible"}
         self.light_pollution_card = {0:"HIGH LIGHT POLLUTION - large cities within 20 miles",
             1:"HIGH LIGHT POLLUTION - large cities within 20 miles",
-            2:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
+            2:"HIGH LIGHT POLLUTION - small or medium towns within 20 miles",
             3:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
             4:"MEDIUM LIGHT POLLUTION - small or medium towns within 20 miles",
             5:"NO LIGHT POLLUTION - no cities within 20 miles"}

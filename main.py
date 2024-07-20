@@ -8,7 +8,8 @@ import nest_asyncio
 
 from flask import Flask, render_template, url_for, flash, redirect, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
-from flask_sqlalchemy import SQLAlchemy, Text
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Text
 from werkzeug.security import generate_password_hash,check_password_hash
 
 from forms import LocationForm, RegistrationForm
@@ -64,7 +65,7 @@ class Location(db.Model):
 class Constellation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=False, nullable=False)
-    description = db.Column(db.text, nullable=False)
+    description = db.Column(Text, nullable=False)
     img = db.Column(db.String(80), unique=True, nullable=False)
 
     def __repr__(self):
@@ -168,8 +169,7 @@ async def process_loc(loc):
     weather_deduction = WeatherAPI.get_weather_score(weather_response)
     loc_score.lower_score(weather_deduction)
     loc_score.moon_light_pollution -= moon_deduction
-    print(loc_score.score)
-    if loc_score.score >= 2:
+    if loc_score.score >= 3:
        weather_rep = WeatherAPI.return_weather_report(weather_response)
        lunar_phase = WeatherAPI.return_moon_phase(weather_response)
        optimal_loc = ({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),'ranking_score':loc_score.score,
@@ -180,6 +180,7 @@ async def process_loc(loc):
 
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
+    session["current_result"] = None
     if len(cur_usr.coords) != 0:
         zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     else:
@@ -218,7 +219,7 @@ def find_stars():
        loop = asyncio.get_event_loop()
        processes = [process_loc(loc) for loc in nearby_locs]
        results = loop.run_until_complete(asyncio.gather(*processes))
-       print(results)
+       #print(results)
        optimal_locs = [result for result in results if result is not None]
        '''
        for loc in nearby_locs:
@@ -261,7 +262,13 @@ def find_stars():
 @app.route("/results/<rating>/<light_rating>/<lunar_phase>/<lunar_impact>",methods=['GET','POST'])
 def results(rating,light_rating,lunar_phase,lunar_impact):
     weather_report = session.get("weather_report", [])
-    point = session.get("location", [])
+    point = session.get("location")
+    address = None
+    if point != None:
+        print("running")
+        calc = CityAPI(point[0],point[1])
+        loc_address = asyncio.run(calc.retrieve_address())
+        address = loc_address['results'][0].get('formatted_address')
     if request.method == "POST":
         lat = request.form.get("hidden_lat")
         lng = request.form.get("hidden_lng")
@@ -285,7 +292,8 @@ def results(rating,light_rating,lunar_phase,lunar_impact):
             db.session.commit()
         flash("Location Saved successfully")
     return render_template("results.html",rating=rating,light_rating=light_rating, 
-                           weather_report=weather_report,lunar_phase=lunar_phase,point=point,lunar_impact = lunar_impact)
+                           weather_report=weather_report,lunar_phase=lunar_phase,point=point,lunar_impact = lunar_impact,
+                           address=address)
          
 @app.route("/update_server", methods=['POST'])
 def webhook():
@@ -310,12 +318,17 @@ def saved_locations_page():
         flash("You have no saved locations","light")
     return render_template('saved_locations.html', locations=locations)
 
-@app.route("/find_constellations/<float:latitude>/<float:longitude>")
-def find_constellations(latitude: float,longitude: float):
+@app.route("/find_constellations/<latitude>/<longitude>")
+def find_constellations(latitude,longitude):
+    
+    lat = float(latitude)
+    lng = float(longitude)
     display_constellations = []
-    loc = (latitude,longitude)
+    loc = (lat,lng)
+    session["location"] = loc
     calc = ConstellationCalculator(loc)
     constellations = calc.find_constellations()
+    print(constellations)
     for constellation in constellations:
         db_constellation = Constellation.query.filter_by(name=constellation).first()
         if db_constellation:
