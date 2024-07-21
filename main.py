@@ -51,16 +51,27 @@ class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=False, nullable=True)
     rating = db.Column(db.Numeric(4, 7), unique=True, nullable=True)
-    reviewers = db.Column(db.Integer, unique=False, nullable=True)
-    state = db.Column(db.String(20), unique=False, nullable=True)
-    county = db.Column(db.String(20), unique=False, nullable=True)
+    reviewer_count = db.Column(db.Integer, unique=False, nullable=True)
+    address = db.Column(db.String(256),unique=False,nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
     longitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
     elevation = db.Column(db.Numeric(6, 1), unique=False, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
-        return f"Location('{self.id},'{self.latitude}',{self.longitude})"
+        return f"Location({self.id},{self.latitude},{self.longitude})"
+
+    def loc_to_dict(self):
+        return {
+                'id':self.id,
+                'name':self.name,
+                'address':self.address,
+                'rating':float(self.rating) if self.rating else None,
+                'reviewer_count':int(self.reviewer_count) if self.reviewer_count else None,
+                'latitude': float(self.latitude),
+                'longitude': float(self.longitude),
+                'elevation': float(self.elevation) if self.elevation else None
+                }
 
 class Constellation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -90,7 +101,11 @@ with app.app_context():
     if Constellation.query.first() is None:
         populate_constellations_table()
 
-
+    address = "testing"
+    if Location.query.filter_by(latitude=43.982465, longitude=-89.078786).first() == None:
+        test_1 = Location(name="test_db_5",reviewer_count=5,latitude=43.982465,longitude=-89.078786,address=address)
+        db.session.add(test_1)
+        db.session.commit()
 
 @login_manager.user_loader
 def load_user_from_db(user_id):
@@ -181,6 +196,11 @@ async def process_loc(loc):
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
     session["current_result"] = None
+    popular_markers = []
+    for location in Location.query.filter(Location.reviewer_count >= 5).all():
+        popular_markers.append(location.loc_to_dict()) 
+
+    print(popular_markers)
     if len(cur_usr.coords) != 0:
         zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     else:
@@ -221,6 +241,8 @@ def find_stars():
        results = loop.run_until_complete(asyncio.gather(*processes))
        #print(results)
        optimal_locs = [result for result in results if result is not None]
+       #sort with higher results at top
+       optimal_locs.sort(key=lambda x: x['ranking_score'],reverse=True)
        '''
        for loc in nearby_locs:
            
@@ -257,7 +279,7 @@ def find_stars():
             zoom_coords = optimal_locs[0] 
 
 
-        return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=optimal_locs)
+        return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=optimal_locs, popular_markers=popular_markers)
 
 @app.route("/results/<rating>/<light_rating>/<lunar_phase>/<lunar_impact>",methods=['GET','POST'])
 def results(rating,light_rating,lunar_phase,lunar_impact):
@@ -310,11 +332,11 @@ def webhook():
 def saved_locations_page():
     #may return multiple users
     #get user id first, then saved locations
-    locations=[]
+    locations = []
     user = load_user_from_db(current_user.id)
     if user:
-        locations= user.saved_locations
-    if locations==[]:
+        locations = user.saved_locations
+    if locations == []:
         flash("You have no saved locations","light")
     return render_template('saved_locations.html', locations=locations)
 
