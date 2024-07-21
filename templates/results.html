@@ -92,7 +92,7 @@
           {% endif %}
       {% endwith %}   
         <h2> Location Address: {{address}} </h2>
-        <h2> Location Coordinates: {{point[0]}},{{point[1]}}</h2>
+        <h2> Location Coordinates: {{point["lat"]}},{{point["lng"]}}</h2>
         <div class="section">
             <div class="section-title">Starlight Ranking</div>
                 <div class="section-content">
@@ -142,8 +142,8 @@
       <form action="" method="POST">
         <label for="nameLabel"> Enter Name</label>
         <input type="text" id="nameLabel" name="name">
-        <input type="hidden" name="hidden_lat" value="{{point[0]}}">
-        <input type="hidden" name="hidden_lng" value="{{point[1]}}">
+        <input type="hidden" name="hidden_lat" value="{{point["lat"]}}">
+        <input type="hidden" name="hidden_lng" value="{{point["lng"]}}">
         <input type="submit" value="Save Location!">
       </form>
     </div>

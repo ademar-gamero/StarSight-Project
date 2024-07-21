@@ -131,13 +131,15 @@
           let lat = marker.latitude;
           let lng = marker.longitude;
           let address = marker.address;  
+          console.log(lat)
+          console.log(lng)
           return `
             <div>
             <h3>${address}</h3>
             <h3>Add rating</h3>
               <p>
                 <a href ="{{ url_for('main_menu')}}">View Reviews</a> |
-                <a href ="{{ url_for('calculate_results',latitude='${lat}',longitude='${lng}')}}">View Results</a>
+                <a href ="/${lat}/${lng}/results">View Results</a>
               </p>
           `;
         }
@@ -194,6 +196,6 @@
             document.getElementById('lng').value = latLng.lng().toFixed(6);
         }
 
-      window.initMap = initMap();
+      initMap();
     </script>
 {% endblock %}

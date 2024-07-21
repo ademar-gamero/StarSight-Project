@@ -102,7 +102,7 @@ with app.app_context():
         populate_constellations_table()
 
     address = "testing"
-    if Location.query.filter_by(latitude=43.982465, longitude=-89.078786).first() == None:
+    if Location.query.filter_by(latitude=43.982465, longitude=-89.078786,reviewer_count=5).first() == None:
         test_1 = Location(name="test_db_5",reviewer_count=5,latitude=43.982465,longitude=-89.078786,address=address)
         db.session.add(test_1)
         db.session.commit()
@@ -172,7 +172,7 @@ def learn_more():
     return render_template("learn_more.html")
 
 #helper method to process a location
-async def process_loc(loc):
+async def process_loc(loc,single):
     loc_score = score1()
     city = CityAPI(loc["lat"],loc["lng"])
     local = await city.get_nearby_cities()
@@ -184,7 +184,7 @@ async def process_loc(loc):
     weather_deduction = WeatherAPI.get_weather_score(weather_response)
     loc_score.lower_score(weather_deduction)
     loc_score.moon_light_pollution -= moon_deduction
-    if loc_score.score >= 3:
+    if loc_score.score >= 3 or single == True: #dont forget to change back
        weather_rep = WeatherAPI.return_weather_report(weather_response)
        lunar_phase = WeatherAPI.return_moon_phase(weather_response)
        optimal_loc = ({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),'ranking_score':loc_score.score,
@@ -289,13 +289,18 @@ def results(rating,light_rating,lunar_phase,lunar_impact):
     address = None
     if point != None:
         print("running")
-        calc = CityAPI(point[0],point[1])
+        calc = CityAPI(point["lat"],point["lng"])
         loc_address = asyncio.run(calc.retrieve_address())
         address = loc_address['results'][0].get('formatted_address')
     if request.method == "POST":
         lat = request.form.get("hidden_lat")
         lng = request.form.get("hidden_lng")
+        print("coords")
+        print(lat)
+        print(lng)
         user = load_user_from_db(current_user.id)
+        print("user")
+        print(user)
         locations = []
         if user:
             locations = user.saved_locations
@@ -303,6 +308,7 @@ def results(rating,light_rating,lunar_phase,lunar_impact):
             loc_lat = loc.latitude
             loc_lng = loc.longitude
             if str(loc_lat) == lat and str(loc_lng) == lng:
+                print("found error")
                 flash("This location is already saved in the database, error")
                 return render_template("results.html",rating=rating,light_rating=light_rating,weather_report=weather_report,lunar_phase=lunar_phase,
                            point=point,lunar_impact=lunar_impact)
@@ -310,10 +316,11 @@ def results(rating,light_rating,lunar_phase,lunar_impact):
         if lat and lng and name:
             lat = float(lat)
             lng = float(lng)
-            new_loc = Location(name=name,latitude=lat,longitude=lng,user=current_user)
+            print("found path")
+            new_loc = Location(name=name,latitude=lat,longitude=lng,address=address,user=current_user)
             db.session.add(new_loc)
             db.session.commit()
-        flash("Location Saved successfully")
+            flash("Location Saved successfully")
     return render_template("results.html",rating=rating,light_rating=light_rating, 
                            weather_report=weather_report,lunar_phase=lunar_phase,point=point,lunar_impact = lunar_impact,
                            address=address)
@@ -341,9 +348,25 @@ def saved_locations_page():
         flash("You have no saved locations","light")
     return render_template('saved_locations.html', locations=locations)
 
+@app.route('/saved_locations/remove_saved/<location_id>', methods=['GET','POST'])
+def remove_saved_location(location_id):
+    location_id = int(location_id)
+    location = Location.query.get(location_id)
+    display_location = None
+    if location:
+        display_location = location.loc_to_dict()
+    if request.method == 'POST':
+        if request.form["answer"] == "yes":
+            db.session.delete(location)
+            db.session.commit()
+            flash("Location successfully removed")
+        else:
+            flash("Location was not removed")
+        return redirect(url_for('saved_locations_page'))
+    return render_template('remove_saved.html',location = display_location)
+
 @app.route("/find_constellations/<latitude>/<longitude>")
 def find_constellations(latitude,longitude):
-    
     lat = float(latitude)
     lng = float(longitude)
     display_constellations = []
@@ -361,16 +384,22 @@ def find_constellations(latitude,longitude):
 
 @app.route('/<latitude>/<longitude>/results')
 def calculate_results(latitude, longitude):
-    loc = (latitude,longitude)
+    lat = float(latitude)
+    lng = float(longitude)
+    loc = {"lat":lat,"lng":lng,"label":1}
     session["location"] = loc
-    result = asyncio.run(process_loc(loc))
-    if result is None:
-        flash("Entry was not found")
-        return redirect(url_for("saved_locations_page"))
-    ranking = result["ranking"]
-    light_ranking = result["light_ranking"]
-    lunar_phase = result["lunar_phase"]
-    session["weather_report"] = result["weather_report"]
+    ranking = None
+    light_ranking = None
+    lunar_phase = None
+    lunar_impact = None
+    result = asyncio.run(process_loc(loc=loc,single=True))
+    print(result)
+    if result is not None:
+        ranking = result["ranking"]
+        light_ranking = result["light_ranking"]
+        lunar_phase = result["lunar_phase"]
+        lunar_impact = result["lunar_impact"]
+        session["weather_report"] = result["weather_report"]
     '''
     loc_score = score1()
     city = CityAPI(latitude,longitude)
@@ -385,7 +414,7 @@ def calculate_results(latitude, longitude):
     ranking = loc_score.return_current_score_str()
     light_ranking = loc_score.return_current_light_pollution_str()
     '''
-    return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase))
+    return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase, lunar_impact=lunar_impact))
     #basically sends a POST request for database
     #if successful we send the data into the html file
 
