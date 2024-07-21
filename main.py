@@ -207,6 +207,7 @@ def find_stars():
         zoom_coords = {"lat":37.263056,"lng":-115.79302}
     form = LocationForm()
     api_key = os.environ.get('GOOGLE_KEY') 
+    map_id = os.environ.get('GOOGLE_ID')
     if request.method == "POST":
        values = request.form.get('selection')
        
@@ -231,7 +232,7 @@ def find_stars():
        lng = request.form.get('lng')
        if lat == '' or lng == '':
         flash("Please select a location from the interactive map or enter a valid latitude/longitude manually")
-        return render_template("find_stars.html", form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=[])
+        return render_template("find_stars.html", form=form, map_api_key = api_key,map_id=map_id,usr_coords = zoom_coords,markers=[])
 
        origin = (lat,lng)
        nearby_locs = cur_usr.calculate_nearby_locs([], origin, search_radius)
@@ -279,7 +280,7 @@ def find_stars():
             zoom_coords = optimal_locs[0] 
 
 
-        return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=optimal_locs, popular_markers=popular_markers)
+        return render_template("find_stars.html",form=form, map_api_key = api_key, map_id=map_id ,usr_coords = zoom_coords,markers=optimal_locs, popular_markers=popular_markers)
 
 @app.route("/results/<rating>/<light_rating>/<lunar_phase>/<lunar_impact>",methods=['GET','POST'])
 def results(rating,light_rating,lunar_phase,lunar_impact):
