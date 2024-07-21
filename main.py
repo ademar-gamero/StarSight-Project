@@ -308,10 +308,8 @@ def friends():
 @login_required
 def accept_friend(friend_id):
     friend_requests = Friend.query.filter_by(user_id=friend_id, friend_id=current_user.id, status='pending').first()
-    current_user_req = Friend.query.filter_by(user_id=current_user.id, friend_id=friend_id, status='pending').first()
     if friend_requests:
         friend_requests.status = 'accepted'
-        current_user_req.status = 'accepted'
         db.session.commit()
         flash('Friend request accepted!', 'success')
     return redirect(url_for('friends'))
@@ -320,13 +318,13 @@ def accept_friend(friend_id):
 @login_required
 def decline_friend(friend_id):
     friend_request = Friend.query.filter_by(user_id=friend_id, friend_id=current_user.id, status='pending').first()
-    current_user_req = Friend.query.filter_by(user_id=current_user.id, friend_id=friend_id, status='pending').first()
     if friend_request:
-        friend_request.status = 'declined'
-        current_user_req.status = 'declined'
+        db.session.delete(friend_request)
         db.session.commit()
         flash('Friend request declined.', 'success')
-        #this pops up on log in page, after logging out
+    return redirect(url_for('friends'))
+
+
     return redirect(url_for('friends'))
 
 if __name__ == "__main__":
