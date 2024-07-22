@@ -52,6 +52,7 @@
           <td>{{marker["lat"]}}</td>
           <td>{{marker["lng"]}}</td>
           <td> <input type="radio" name="selection" value='{{ marker|tojson }}' ></td>
+          <a href="{{ url_for('reviews', marker_id=marker['label']) }}"><button>Reviews</button></a>
         </tr>
         {% endfor %}
       </table>

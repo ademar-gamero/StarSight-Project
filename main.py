@@ -275,21 +275,21 @@ def calculate_results(latitude, longitude):
 
 # reviews code
 # TODO: make reviews dynamic for locations
-@app.route('/reviews')
-def location_reviews():
-    reviews = Reviews.query.all()
+@app.route('/reviews/<int:marker_id>')
+def reviews(marker_id):
+    reviews = Reviews.query.filter_by(location_id=marker_id).order_by(Reviews.date.desc()).all()
     return render_template('reviews.html', reviews=reviews)
 
 
-@app.route('/submit_review', methods=['POST'])
-def submit_review():
+@app.route('/submit_review/<int:marker_id>', methods=['POST'])
+def submit_review(marker_id):
     rating = int(request.form['rating'])
     comment = request.form['comment']
-    new_review = Reviews(rating=rating, comment=comment)
+    new_review = Reviews(rating=rating, comment=comment, location_id=marker_id)
     db.session.add(new_review)
     db.session.commit()
-    return redirect(url_for('review'))
+    return redirect(url_for('reviews'))
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True)
