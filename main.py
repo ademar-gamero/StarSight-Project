@@ -24,7 +24,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 # Initialize Roboflow client
 CLIENT = InferenceHTTPClient(
     api_url="https://detect.roboflow.com",
-    api_key="BmaSz5YCzhmjapwU7201"
+    api_key=os.getenv("ROBOFLOW_API_KEY")
 )
 
 db = SQLAlchemy(app)
