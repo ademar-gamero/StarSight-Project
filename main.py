@@ -115,6 +115,21 @@ def populate_constellations_table():
                 "description": "Orion is a prominent set of stars most visible during winter in the northern celestial hemisphere. It is one of the 88 modern constellations; it was among the 48 constellations listed by the 2nd-century astronomer Ptolemy. It is named for a hunter in Greek mythology.",
                 "img":"orion.jpg"
                 },
+                {   
+                "name":"Ursa Major",
+                "description": "Ursa Major (also known as the Great Bear) is a constellation in the northern sky, whose associated mythology likely dates back into prehistory. Its Latin name means greater (or larger) bear, referring to and contrasting it with nearby Ursa Minor, the lesser bear.",
+                "img":"Ursa Major.jpg"
+                },
+                {   
+                "name":"Hercules",
+                "description": "Hercules is a constellation named after Hercules, the Roman mythological hero adapted from the Greek hero Heracles. Hercules was one of the 48 constellations listed by the second-century astronomer Ptolemy, and it remains one of the 88 modern constellations today. It is the fifth-largest of the modern constellations and is the largest of the 50 which have no stars brighter than apparent magnitude +2.5.",
+                "img":"Hercules.jpg"
+                },
+                {   
+                "name":"Hercules",
+                "description": "Hercules is a constellation named after Hercules, the Roman mythological hero adapted from the Greek hero Heracles. Hercules was one of the 48 constellations listed by the second-century astronomer Ptolemy, and it remains one of the 88 modern constellations today. It is the fifth-largest of the modern constellations and is the largest of the 50 which have no stars brighter than apparent magnitude +2.5.",
+                "img":"Hercules.jpg"
+                },
             ]
     for entry in constellations:
         constellation = Constellation(name=entry["name"],description=entry["description"],img=entry["img"])
