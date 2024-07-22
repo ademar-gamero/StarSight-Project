@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, DecimalField, SubmitField, SelectField
+from wtforms import StringField, PasswordField, DecimalField, SubmitField, SelectField, FileField
 from wtforms.validators import DataRequired, Length, EqualTo
 from distance import curr_user
 
@@ -18,4 +18,9 @@ class RegistrationForm(FlaskForm):
     #confirm_password = PasswordField('Confirm Password',
                                      #validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
+
+class UploadPhotoForm(FlaskForm):
+    photo = FileField('Upload a photo', validators=[DataRequired()])
+    submit = SubmitField('Submit')
+
 

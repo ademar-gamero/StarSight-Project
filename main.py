@@ -5,8 +5,9 @@ from flask import Flask, render_template, url_for, flash, redirect, request, ses
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.utils import secure_filename
 
-from forms import LocationForm, RegistrationForm
+from forms import LocationForm, RegistrationForm, UploadPhotoForm
 from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
 import secrets
@@ -16,6 +17,10 @@ import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
+
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -260,6 +265,42 @@ def calculate_results(latitude, longitude):
     return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase))
     #basically sends a POST request for database
     #if successful we send the data into the html file
+
+@app.route('/upload_photo', methods=['GET', 'POST'])
+@login_required
+def upload_photo():
+    if request.method == 'POST':
+        if 'photo' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['photo']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            constellations = detect_constellations(filepath)
+            session['constellations'] = constellations
+            return redirect(url_for('constellation_results'))
+    return render_template('upload_photo.html')
+
+@app.route('/constellation_results')
+@login_required
+def constellation_results():
+    constellations = session.get('constellations', [])
+    return render_template('constellation_results.html', constellations=constellations)
+
+def detect_constellations(filepath):
+    # Waiting to replace with actual ML
+    # For now, returning some dummy constellations
+    return ['Orion', 'Cassiopeia', 'Ursa Major']
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

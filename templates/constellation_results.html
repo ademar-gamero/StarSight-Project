@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <style>
+        body {
+            background-image: url({{ url_for('static', filename='/images/Star-background.jpg') }});
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background-color: rgba(211, 211, 211, 0.8);
+            padding: 50px;
+            border-radius: 10px;
+            text-align: center;
+            width: 50%;
+        }
+        h1 {
+            color: #333;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            color: #555;
+            margin: 10px 0;
+        }
+        .btn-primary {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Constellations:</h1>
+        <ul>
+            {% for constellation in constellations %}
+                <li>{{ constellation }}</li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('upload_photo') }}" class="btn btn-primary">Upload Another</a>
+    </div>
+</body>
+</html>
