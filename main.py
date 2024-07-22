@@ -238,7 +238,7 @@ def find_stars():
        nearby_locs = cur_usr.calculate_nearby_locs([], origin, search_radius)
        optimal_locs = []
        loop = asyncio.get_event_loop()
-       processes = [process_loc(loc) for loc in nearby_locs]
+       processes = [process_loc(loc=loc,single=False) for loc in nearby_locs]
        results = loop.run_until_complete(asyncio.gather(*processes))
        #print(results)
        optimal_locs = [result for result in results if result is not None]
