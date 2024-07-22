@@ -6,6 +6,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.utils import secure_filename
+from inference_sdk import InferenceHTTPClient
 
 from forms import LocationForm, RegistrationForm, UploadPhotoForm
 from distance import curr_user, score1, CityAPI
@@ -13,14 +14,18 @@ from weather_api import WeatherAPI
 import secrets
 import os
 
-
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Initialize Roboflow client
+CLIENT = InferenceHTTPClient(
+    api_url="https://detect.roboflow.com",
+    api_key="BmaSz5YCzhmjapwU7201"
+)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -293,9 +298,10 @@ def constellation_results():
     return render_template('constellation_results.html', constellations=constellations)
 
 def detect_constellations(filepath):
-    # Waiting to replace with actual ML
-    # For now, returning some dummy constellations
-    return ['Orion', 'Cassiopeia', 'Ursa Major']
+    result = CLIENT.infer(filepath, model_id="constellation-dsphi/1")
+    detections = result['predictions']
+    constellations = [det['class'] for det in detections]
+    return constellations
 
 if __name__ == '__main__':
     app.run(debug=True)
