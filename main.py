@@ -1,9 +1,15 @@
 import git
 import ast
 import json
+
+import asyncio
+import aiohttp
+import nest_asyncio
+
 from flask import Flask, render_template, url_for, flash, redirect, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Text
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.utils import secure_filename
 from inference_sdk import InferenceHTTPClient
@@ -11,11 +17,14 @@ from inference_sdk import InferenceHTTPClient
 
 from forms import LocationForm, RegistrationForm, AddFriendForm, UploadPhotoForm
 
+from datetime import datetime
 from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
+from constellation import ConstellationCalculator
 import secrets
 import os
-from datetime import datetime
+
+nest_asyncio.apply()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
@@ -56,16 +65,28 @@ class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=False, nullable=True)
     rating = db.Column(db.Numeric(4, 7), unique=True, nullable=True)
-    reviewers = db.Column(db.Integer, unique=False, nullable=True)
-    state = db.Column(db.String(20), unique=False, nullable=True)
-    county = db.Column(db.String(20), unique=False, nullable=True)
+    reviewer_count = db.Column(db.Integer, unique=False, nullable=True)
+    address = db.Column(db.String(256),unique=False,nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
     longitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
     elevation = db.Column(db.Numeric(6, 1), unique=False, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     def __repr__(self):
-        return f"Location('{self.id},'{self.latitude}',{self.longitude})"
+        return f"Location({self.id},{self.latitude},{self.longitude})"
+
+    def loc_to_dict(self):
+        return {
+                'id':self.id,
+                'name':self.name,
+                'address':self.address,
+                'rating':float(self.rating) if self.rating else None,
+                'reviewer_count':int(self.reviewer_count) if self.reviewer_count else None,
+                'latitude': float(self.latitude),
+                'longitude': float(self.longitude),
+                'elevation': float(self.elevation) if self.elevation else None
+                }
+    
     
 class Friend(db.Model):
     id = db.Column(db.Integer, primary_key=True) #Primary key for Friend table
@@ -77,6 +98,28 @@ class Friend(db.Model):
     def __repr__(self):
         return f"Friendship('{self.user_id}', '{self.friend_id}', '{self.status}')"
 
+
+class Constellation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=False, nullable=False)
+    description = db.Column(Text, nullable=False)
+    img = db.Column(db.String(80), unique=True, nullable=False)
+
+    def __repr__(self):
+        return f"Constellation({self.name})"
+
+def populate_constellations_table():
+    constellations = [
+                {   
+                "name":"Orion",
+                "description": "Orion is a prominent set of stars most visible during winter in the northern celestial hemisphere. It is one of the 88 modern constellations; it was among the 48 constellations listed by the 2nd-century astronomer Ptolemy. It is named for a hunter in Greek mythology.",
+                "img":"orion.jpg"
+                },
+            ]
+    for entry in constellations:
+        constellation = Constellation(name=entry["name"],description=entry["description"],img=entry["img"])
+        db.session.add(constellation)
+    db.session.commit()
 
 class Reviews(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -90,8 +133,17 @@ class Reviews(db.Model):
 
 # password = generate_password_hash("password")
 
+
 with app.app_context():
     db.create_all()
+    if Constellation.query.first() is None:
+        populate_constellations_table()
+
+    address = "testing"
+    if Location.query.filter_by(latitude=43.982465, longitude=-89.078786,reviewer_count=5).first() == None:
+        test_1 = Location(name="test_db_5",reviewer_count=5,latitude=43.982465,longitude=-89.078786,address=address)
+        db.session.add(test_1)
+        db.session.commit()
 
 @login_manager.user_loader
 def load_user_from_db(user_id):
@@ -157,15 +209,43 @@ def register():
 def learn_more():
     return render_template("learn_more.html")
 
+#helper method to process a location
+async def process_loc(loc,single):
+    loc_score = score1()
+    city = CityAPI(loc["lat"],loc["lng"])
+    local = await city.get_nearby_cities()
+    await city.city_calculate(loc_score,local)
+    await city.calculate_elevation(loc_score)
+    weather_response = WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
+    moon_illum = WeatherAPI.return_moon_illumination(weather_response)
+    moon_deduction = WeatherAPI.calculate_moon_deduction(moon_illum)
+    weather_deduction = WeatherAPI.get_weather_score(weather_response)
+    loc_score.lower_score(weather_deduction)
+    loc_score.moon_light_pollution -= moon_deduction
+    if loc_score.score >= 3 or single == True: #dont forget to change back
+       weather_rep = WeatherAPI.return_weather_report(weather_response)
+       lunar_phase = WeatherAPI.return_moon_phase(weather_response)
+       optimal_loc = ({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),'ranking_score':loc_score.score,
+                            'light_ranking':loc_score.return_current_light_pollution_str(), 'weather_report':weather_rep,
+                            'lunar_phase':lunar_phase, 'lunar_impact':loc_score.moon_light_pollution_card[loc_score.moon_light_pollution]})
+       return optimal_loc
+    return None
+
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
-    
+    session["current_result"] = None
+    popular_markers = []
+    for location in Location.query.filter(Location.reviewer_count >= 5).all():
+        popular_markers.append(location.loc_to_dict()) 
+
+    print(popular_markers)
     if len(cur_usr.coords) != 0:
         zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     else:
         zoom_coords = {"lat":37.263056,"lng":-115.79302}
     form = LocationForm()
     api_key = os.environ.get('GOOGLE_KEY') 
+    map_id = os.environ.get('GOOGLE_ID')
     if request.method == "POST":
        values = request.form.get('selection')
        
@@ -182,31 +262,50 @@ def find_stars():
            session["weather_report"] = weather_report
            session["location"] = point
            l_phase = v_processed["lunar_phase"]
-           return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase))
+           l_score = v_processed["lunar_impact"]
+           return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase,lunar_impact=l_score))
        session.pop("optimal_locs",[])
        search_radius = form.loc_radius.data
        lat = request.form.get('lat')
        lng = request.form.get('lng')
        if lat == '' or lng == '':
         flash("Please select a location from the interactive map or enter a valid latitude/longitude manually")
-        return render_template("find_stars.html", form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=[])
+        return render_template("find_stars.html", form=form, map_api_key = api_key,map_id=map_id,usr_coords = zoom_coords,markers=[])
+
        origin = (lat,lng)
        nearby_locs = cur_usr.calculate_nearby_locs([], origin, search_radius)
        optimal_locs = []
+       loop = asyncio.get_event_loop()
+       processes = [process_loc(loc=loc,single=False) for loc in nearby_locs]
+       results = loop.run_until_complete(asyncio.gather(*processes))
+       #print(results)
+       optimal_locs = [result for result in results if result is not None]
+       #sort with higher results at top
+       optimal_locs.sort(key=lambda x: x['ranking_score'],reverse=True)
+       '''
        for loc in nearby_locs:
+           
+           
            loc_score = score1()
            city = CityAPI(loc["lat"],loc["lng"])
            local = city.get_nearby_cities()
            city.city_calculate(loc_score,local)
+           city.calculate_elevation(loc_score)
            weather_response = WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
+           moon_illum = WeatherAPI.return_moon_illumination(weather_response)
+           moon_deduction = WeatherAPI.calculate_moon_deduction(moon_illum)
            weather_deduction = WeatherAPI.get_weather_score(weather_response)
            loc_score.lower_score(weather_deduction)
-           if loc_score.score >= 3:
+           loc_score.moon_light_pollution -= moon_deduction
+           print(loc_score.score)
+           if loc_score.score >= 2:
                weather_rep = WeatherAPI.return_weather_report(weather_response)
                lunar_phase = WeatherAPI.return_moon_phase(weather_response)
-               optimal_locs.append({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),
+               optimal_locs.append({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),'ranking_score':loc_score.score,
                                     'light_ranking':loc_score.return_current_light_pollution_str(), 'weather_report':weather_rep,
-                                    'lunar_phase':lunar_phase})
+                                    'lunar_phase':lunar_phase, 'lunar_impact':loc_score.moon_light_pollution_card[loc_score.moon_light_pollution]})
+            '''
+
        session['optimal_locs'] = optimal_locs
        if optimal_locs == []:
            flash("We didnt find any suitable locations for viewing stars nearby, consider making your radius bigger")
@@ -217,16 +316,29 @@ def find_stars():
             pass
         else:
             zoom_coords = optimal_locs[0] 
-        return render_template("find_stars.html",form=form, map_api_key = api_key,usr_coords = zoom_coords,markers=optimal_locs)
 
-@app.route("/results/<rating>/<light_rating>/<lunar_phase>",methods=['GET','POST'])
-def results(rating,light_rating,lunar_phase):
+
+        return render_template("find_stars.html",form=form, map_api_key = api_key, map_id=map_id ,usr_coords = zoom_coords,markers=optimal_locs, popular_markers=popular_markers)
+
+@app.route("/results/<rating>/<light_rating>/<lunar_phase>/<lunar_impact>",methods=['GET','POST'])
+def results(rating,light_rating,lunar_phase,lunar_impact):
     weather_report = session.get("weather_report", [])
-    point = session.get("location", [])
+    point = session.get("location")
+    address = None
+    if point != None:
+        print("running")
+        calc = CityAPI(point["lat"],point["lng"])
+        loc_address = asyncio.run(calc.retrieve_address())
+        address = loc_address['results'][0].get('formatted_address')
     if request.method == "POST":
         lat = request.form.get("hidden_lat")
         lng = request.form.get("hidden_lng")
+        print("coords")
+        print(lat)
+        print(lng)
         user = load_user_from_db(current_user.id)
+        print("user")
+        print(user)
         locations = []
         if user:
             locations = user.saved_locations
@@ -234,18 +346,22 @@ def results(rating,light_rating,lunar_phase):
             loc_lat = loc.latitude
             loc_lng = loc.longitude
             if str(loc_lat) == lat and str(loc_lng) == lng:
+                print("found error")
                 flash("This location is already saved in the database, error")
                 return render_template("results.html",rating=rating,light_rating=light_rating,weather_report=weather_report,lunar_phase=lunar_phase,
-                           point=point)
+                           point=point,lunar_impact=lunar_impact)
         name = request.form.get("name")
         if lat and lng and name:
             lat = float(lat)
             lng = float(lng)
-            new_loc = Location(name=name,latitude=lat,longitude=lng,user=current_user)
+            print("found path")
+            new_loc = Location(name=name,latitude=lat,longitude=lng,address=address,user=current_user)
             db.session.add(new_loc)
             db.session.commit()
-        flash("Location Saved successfully")
-    return render_template("results.html",rating=rating,light_rating=light_rating, weather_report=weather_report,lunar_phase=lunar_phase,point=point)
+            flash("Location Saved successfully")
+    return render_template("results.html",rating=rating,light_rating=light_rating, 
+                           weather_report=weather_report,lunar_phase=lunar_phase,point=point,lunar_impact = lunar_impact,
+                           address=address)
          
 @app.route("/update_server", methods=['POST'])
 def webhook():
@@ -262,25 +378,67 @@ def webhook():
 def saved_locations_page():
     #may return multiple users
     #get user id first, then saved locations
-    locations=[]
+    locations = []
     user = load_user_from_db(current_user.id)
     if user:
-        locations= user.saved_locations
-    if locations==[]:
+        locations = user.saved_locations
+    if locations == []:
         flash("You have no saved locations","light")
     return render_template('saved_locations.html', locations=locations)
 
-#implementing later
-#@app.route('/save_location')
-#def save_location():
-    #redirect url after saving location it goes to the saved location saved_locations_page
-    #return redirect(url_for('saved_locations'))
+@app.route('/saved_locations/remove_saved/<location_id>', methods=['GET','POST'])
+def remove_saved_location(location_id):
+    location_id = int(location_id)
+    location = Location.query.get(location_id)
+    display_location = None
+    if location:
+        display_location = location.loc_to_dict()
+    if request.method == 'POST':
+        if request.form["answer"] == "yes":
+            db.session.delete(location)
+            db.session.commit()
+            flash("Location successfully removed")
+        else:
+            flash("Location was not removed")
+        return redirect(url_for('saved_locations_page'))
+    return render_template('remove_saved.html',location = display_location)
 
+@app.route("/find_constellations/<latitude>/<longitude>")
+def find_constellations(latitude,longitude):
+    lat = float(latitude)
+    lng = float(longitude)
+    display_constellations = []
+    loc = (lat,lng)
+    session["location"] = loc
+    calc = ConstellationCalculator(loc)
+    constellations = calc.find_constellations()
+    print(constellations)
+    for constellation in constellations:
+        db_constellation = Constellation.query.filter_by(name=constellation).first()
+        if db_constellation:
+            display_constellations.append({"name":db_constellation.name,"img":db_constellation.img,"description":db_constellation.description})
+    return render_template("find_constellations.html", constellations=display_constellations)
+             
 
 @app.route('/<latitude>/<longitude>/results')
 def calculate_results(latitude, longitude):
-    loc = (latitude,longitude)
+    lat = float(latitude)
+    lng = float(longitude)
+    loc = {"lat":lat,"lng":lng,"label":1}
     session["location"] = loc
+    ranking = None
+    light_ranking = None
+    lunar_phase = None
+    lunar_impact = None
+    result = asyncio.run(process_loc(loc=loc,single=True))
+    print(result)
+    if result is not None:
+        ranking = result["ranking"]
+        light_ranking = result["light_ranking"]
+        lunar_phase = result["lunar_phase"]
+        lunar_impact = result["lunar_impact"]
+        session["weather_report"] = result["weather_report"]
+    '''
     loc_score = score1()
     city = CityAPI(latitude,longitude)
     local = city.get_nearby_cities()
@@ -293,7 +451,8 @@ def calculate_results(latitude, longitude):
     lunar_phase = WeatherAPI.return_moon_phase(weather_response)
     ranking = loc_score.return_current_score_str()
     light_ranking = loc_score.return_current_light_pollution_str()
-    return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase))
+    '''
+    return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase, lunar_impact=lunar_impact))
     #basically sends a POST request for database
     #if successful we send the data into the html file
 
