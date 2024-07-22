@@ -78,7 +78,7 @@
 <body>
     <div class="container">
         <h1>Star Gazing Forecast</h1>
-        <a href="{{ url_for('find_constellations', latitude=point[0], longitude=point[1]) }}"> Find Constellations! </a>
+<a href="{{ url_for('find_constellations', latitude=point["lat"], longitude=point["lng"]) }}"> Find Constellations! </a>
        {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
               <div class="container mt-4">
