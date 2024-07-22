@@ -24,6 +24,13 @@ from constellation import ConstellationCalculator
 import secrets
 import os
 
+# print("KEYS:")
+# print(os.environ['API_KEY'])
+# print(os.environ['GOOGLE_KEY'])
+# print(os.environ['NINJA_KEY'])
+# print(os.environ['GOOGLE_ID'])
+
+
 nest_asyncio.apply()
 
 app = Flask(__name__)
@@ -71,20 +78,21 @@ class Location(db.Model):
     longitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
     elevation = db.Column(db.Numeric(6, 1), unique=False, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-
+    shared_with = db.Column(db.Text, nullable=True)
     def __repr__(self):
         return f"Location({self.id},{self.latitude},{self.longitude})"
 
     def loc_to_dict(self):
         return {
-                'id':self.id,
-                'name':self.name,
-                'address':self.address,
-                'rating':float(self.rating) if self.rating else None,
-                'reviewer_count':int(self.reviewer_count) if self.reviewer_count else None,
+                'id': self.id,
+                'name': self.name,
+                'address': self.address,
+                'rating': float(self.rating) if self.rating else None,
+                'reviewer_count': int(self.reviewer_count) if self.reviewer_count else None,
                 'latitude': float(self.latitude),
                 'longitude': float(self.longitude),
-                'elevation': float(self.elevation) if self.elevation else None
+                'elevation': float(self.elevation) if self.elevation else None,
+                'shared_with': self.shared_with  # Include shared_with in the dictionary
                 }
     
     
@@ -255,7 +263,7 @@ def find_stars():
            loc_lng = v_processed["lng"]
            loc_lat = float(loc_lat)
            loc_lng = float(loc_lng)
-           point = [loc_lat,loc_lng]
+           point = {"lat":loc_lat,"lng":loc_lng}
            ovrl_ranking = v_processed["ranking"]
            light_ranking = v_processed["light_ranking"]
            weather_report = v_processed["weather_report"]
@@ -384,7 +392,29 @@ def saved_locations_page():
         locations = user.saved_locations
     if locations == []:
         flash("You have no saved locations","light")
-    return render_template('saved_locations.html', locations=locations)
+
+    friends = db.session.query(User).filter(
+        (User.id == Friend.friend_id) & (Friend.user_id == current_user.id) & (Friend.status == 'accepted') |
+        (User.id == Friend.user_id) & (Friend.friend_id == current_user.id) & (Friend.status == 'accepted')
+    ).distinct().all()
+
+    return render_template('saved_locations.html', locations=locations, friends=friends)
+
+@app.route('/share_location/<int:location_id>', methods=['POST'])
+@login_required
+def share_location(location_id):
+    friend_id = request.form.get('friend_id')
+    location = Location.query.get(location_id)
+    if location and friend_id:
+        shared_with = location.shared_with.split(',') if location.shared_with else []
+        if friend_id not in shared_with:
+            shared_with.append(friend_id)
+            location.shared_with = ','.join(shared_with)
+            db.session.commit()
+            flash(f'Location shared with {User.query.get(friend_id).username}!', 'success')
+        else:
+            flash('Location already shared with this friend.', 'info')
+    return redirect(url_for('saved_locations_page'))
 
 @app.route('/saved_locations/remove_saved/<location_id>', methods=['GET','POST'])
 def remove_saved_location(location_id):
@@ -516,8 +546,20 @@ def friends():
     ).distinct().all()
 
     pending_user_requests = [(User.query.get(req.user_id), req) for req in pending_requests]
+
+    # Fetch locations shared with the current user
+    shared_locations_data = []
+    shared_locations = Location.query.filter(Location.shared_with.like(f"%{current_user.id}%")).all()
+    for location in shared_locations:
+        sharer_users = User.query.filter(User.saved_locations.contains(location)).all()
+        sharers = ', '.join([user.username for user in sharer_users])
+        shared_locations_data.append({
+            'location': location,
+            'sharers': sharers
+        })
+
     return render_template('friends.html', form=form, friends=friends,
-                           pending_user_requests=pending_user_requests)
+                           pending_user_requests=pending_user_requests, shared_locations_data=shared_locations_data)
 
 @app.route('/accept_friend/<int:friend_id>')
 @login_required
@@ -540,6 +582,45 @@ def decline_friend(friend_id):
     return redirect(url_for('friends'))
 
     return redirect(url_for('friends'))
+
+@app.route('/save_shared_location/<int:location_id>', methods=['POST'])
+@login_required
+def save_shared_location(location_id):
+    location = Location.query.get(location_id)
+    if location:
+        new_location = Location(
+            name=location.name,
+            rating=location.rating,
+            reviewer_count=location.reviewer_count,
+            address=location.address,
+            latitude=location.latitude,
+            longitude=location.longitude,
+            elevation=location.elevation,
+            user_id=current_user.id
+        )
+        db.session.add(new_location)
+        # Remove the user ID from the shared_with list
+        shared_with_list = location.shared_with.split(',')
+        shared_with_list.remove(str(current_user.id))
+        location.shared_with = ','.join(shared_with_list) if shared_with_list else None
+        db.session.commit()
+        flash('Location saved to your saved locations!', 'success')
+    return redirect(url_for('friends'))
+
+@app.route('/remove_shared_location/<int:location_id>', methods=['POST'])
+@login_required
+def remove_shared_location(location_id):
+    location = Location.query.get(location_id)
+    if location:
+        # Remove the user ID from the shared_with list
+        shared_with_list = location.shared_with.split(',')
+        shared_with_list.remove(str(current_user.id))
+        location.shared_with = ','.join(shared_with_list) if shared_with_list else None
+        db.session.commit()
+        flash('Location removed from shared locations.', 'success')
+    return redirect(url_for('friends'))
+
+
 
 # reviews code
 # TODO: make reviews dynamic for locations
