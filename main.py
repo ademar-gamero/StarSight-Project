@@ -303,10 +303,5 @@ def detect_constellations(filepath):
     constellations = [det['class'] for det in detections]
     return constellations
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
-
-
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True)

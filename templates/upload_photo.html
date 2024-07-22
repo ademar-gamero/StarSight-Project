@@ -21,7 +21,7 @@
             top: 0;
             z-index: 1000;
         }
-        .container {
+        .content {
             background-color: rgba(211, 211, 211, 0.8);
             padding: 50px;
             border-radius: 10px;
@@ -32,13 +32,8 @@
         h1 {
             color: #333;
         }
-        ul {
-            list-style-type: none;
-            padding: 0;
-        }
-        li {
+        p {
             color: #555;
-            /*margin: 10px 0;*/
         }
         .btn-primary {
             margin-top: 20px;
@@ -70,14 +65,15 @@
             </div>
         </div>
     </nav>
-    <div class="container">
-        <h1>Your Constellations:</h1>
-        <ul>
-            {% for constellation in constellations %}
-                <li>{{ constellation }}</li>
-            {% endfor %}
-        </ul>
-        <a href="{{ url_for('upload_photo') }}" class="btn btn-primary">Upload Another</a>
+    <div class="content">
+        <h1>What am I looking at?</h1>
+        <p>Upload a photo of the night sky to uncover the constellations waiting to be discovered.</p>
+        <form action="{{ url_for('upload_photo') }}" method="POST" enctype="multipart/form-data">
+            <input type="file" name="photo" class="form-control" required>
+            <button type="submit" class="btn btn-primary">Upload a photo</button>
+        </form>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js" integrity="sha384-eMNn1+ITKQ1JgNJz5gCGke/z5+R5UBrk0p4T5eVvYmBst0hU1LvTQAd7hJ23kpcH" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiY2yP/5+c6py6qrEHCy8fN24lY9ErYx0V3+45nGJpG5jhWnCRBJ+8q2A" crossorigin="anonymous"></script>
 </body>
 </html>
