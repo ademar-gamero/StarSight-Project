@@ -11,6 +11,7 @@ from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
 import secrets
 import os
+from datetime import datetime
 
 
 
@@ -53,7 +54,7 @@ class Location(db.Model):
 
     def __repr__(self):
         return f"Location('{self.id},'{self.latitude}',{self.longitude})"
-
+    
 class Friend(db.Model):
     id = db.Column(db.Integer, primary_key=True) #Primary key for Friend table
     user_id = db.Column(db.Integer, db.ForeignKey('user.id')) #Foreign key column linking User tbale, id of user who sent the request
@@ -65,7 +66,17 @@ class Friend(db.Model):
         return f"Friendship('{self.user_id}', '{self.friend_id}', '{self.status}')"
 
 
-password = generate_password_hash("password")
+class Reviews(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.today())
+    # foreign keys to reference users and locations
+    location_id = db.Column(db.Integer, db.ForeignKey('location.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+
+# password = generate_password_hash("password")
 
 with app.app_context():
     db.create_all()
@@ -326,6 +337,25 @@ def decline_friend(friend_id):
 
 
     return redirect(url_for('friends'))
+
+
+# reviews code
+# TODO: make reviews dynamic for locations
+@app.route('/reviews')
+def location_reviews():
+    reviews = Reviews.query.all()
+    return render_template('reviews.html', reviews=reviews)
+
+
+@app.route('/submit_review', methods=['POST'])
+def submit_review():
+    rating = int(request.form['rating'])
+    comment = request.form['comment']
+    new_review = Reviews(rating=rating, comment=comment)
+    db.session.add(new_review)
+    db.session.commit()
+    return redirect(url_for('review'))
+
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")
