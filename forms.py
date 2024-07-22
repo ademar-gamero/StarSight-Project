@@ -19,8 +19,12 @@ class RegistrationForm(FlaskForm):
                                      #validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
 
+
 class UploadPhotoForm(FlaskForm):
     photo = FileField('Upload a photo', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
+class AddFriendForm(FlaskForm):
+    friend_username = StringField('Friend Username', validators=[DataRequired(), Length(min=2, max=20)])
+    submit = SubmitField('Add Friend')
 
