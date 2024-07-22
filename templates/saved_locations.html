@@ -28,6 +28,7 @@
             <th>Longitude</th>
             <th>View Results</th>
             <th>Remove Location</th>
+            <th>Share Location</th>
         </tr>
         {% for location in locations %}
         <tr>
@@ -37,6 +38,16 @@
             <td>{{ location.longitude }}</td>
             <td><a href="/{{ location.latitude }}/{{location.longitude}}/results">View Results</a></td>
             <td><a href="/saved_locations/remove_saved/{{location.id}}">Remove Location</a></td>
+            <td>
+                <form action="{{ url_for('share_location', location_id=location.id) }}" method="POST">
+                    <select name="friend_id" class="form-select">
+                        {% for friend in friends %}
+                        <option value="{{ friend.id }}">{{ friend.username }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-primary mt-1">Share</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </table>
