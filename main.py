@@ -124,12 +124,7 @@ def populate_constellations_table():
                 "name":"Hercules",
                 "description": "Hercules is a constellation named after Hercules, the Roman mythological hero adapted from the Greek hero Heracles. Hercules was one of the 48 constellations listed by the second-century astronomer Ptolemy, and it remains one of the 88 modern constellations today. It is the fifth-largest of the modern constellations and is the largest of the 50 which have no stars brighter than apparent magnitude +2.5.",
                 "img":"Hercules.jpg"
-                },
-                {   
-                "name":"Hercules",
-                "description": "Hercules is a constellation named after Hercules, the Roman mythological hero adapted from the Greek hero Heracles. Hercules was one of the 48 constellations listed by the second-century astronomer Ptolemy, and it remains one of the 88 modern constellations today. It is the fifth-largest of the modern constellations and is the largest of the 50 which have no stars brighter than apparent magnitude +2.5.",
-                "img":"Hercules.jpg"
-                },
+                }
             ]
     for entry in constellations:
         constellation = Constellation(name=entry["name"],description=entry["description"],img=entry["img"])
@@ -580,4 +575,4 @@ def submit_review():
     return redirect(url_for('review'))
 
 if __name__ == "__main__":
-    app.run(debug=True,host="0.0.0.0")
+    app.run(debug=True, host='0.0.0.0')
