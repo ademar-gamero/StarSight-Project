@@ -6,7 +6,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash,check_password_hash
 
-from forms import LocationForm, RegistrationForm
+from forms import LocationForm, RegistrationForm, AddFriendForm
 from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
 import secrets
@@ -41,7 +41,9 @@ class User(db.Model, UserMixin):
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30), unique=False, nullable=False)
+    name = db.Column(db.String(30), unique=False, nullable=True)
+    rating = db.Column(db.Numeric(4, 7), unique=True, nullable=True)
+    reviewers = db.Column(db.Integer, unique=False, nullable=True)
     state = db.Column(db.String(20), unique=False, nullable=True)
     county = db.Column(db.String(20), unique=False, nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
@@ -51,6 +53,16 @@ class Location(db.Model):
 
     def __repr__(self):
         return f"Location('{self.id},'{self.latitude}',{self.longitude})"
+
+class Friend(db.Model):
+    id = db.Column(db.Integer, primary_key=True) #Primary key for Friend table
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id')) #Foreign key column linking User tbale, id of user who sent the request
+    friend_id = db.Column(db.Integer, nullable=False) #A column for the ID of user who recieved the friend request
+    status = db.Column(db.String(20), nullable=True) # 'pending', 'accepted'
+    friend = db.relationship('User', backref='friend') #establish relationship to the user, specifically person who received request
+
+    def __repr__(self):
+        return f"Friendship('{self.user_id}', '{self.friend_id}', '{self.status}')"
 
 
 password = generate_password_hash("password")
@@ -124,6 +136,7 @@ def learn_more():
 
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
+    
     if len(cur_usr.coords) != 0:
         zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     else:
@@ -173,7 +186,7 @@ def find_stars():
                                     'lunar_phase':lunar_phase})
        session['optimal_locs'] = optimal_locs
        if optimal_locs == []:
-           flash("We didnt find any suitable locations for viewing stars nearby")
+           flash("We didnt find any suitable locations for viewing stars nearby, consider making your radius bigger")
        return redirect(url_for("find_stars"))
     else:
         optimal_locs = session.get('optimal_locs', [])
@@ -260,6 +273,59 @@ def calculate_results(latitude, longitude):
     return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase))
     #basically sends a POST request for database
     #if successful we send the data into the html file
+
+@app.route('/friends', methods=["GET", "POST"])
+@login_required
+def friends():
+    form = AddFriendForm()
+    if form.validate_on_submit():
+        friend = User.query.filter_by(username=form.friend_username.data).first()
+        if friend and friend.id != current_user.id:
+            existing_friendship = Friend.query.filter_by(user_id=current_user.id, friend_id=friend.id).first()
+            if not existing_friendship:
+                new_friend = Friend(user_id=current_user.id, friend_id=friend.id, status="pending")
+                db.session.add(new_friend)
+                db.session.commit()
+                flash('Friend request sent!', 'success')
+            else:
+                flash('Friend request already exists!', 'danger')
+        else:
+            flash('User not found or trying to friend yourself.', 'danger')
+
+    pending_requests = Friend.query.filter_by(friend_id=current_user.id, status='pending').all()
+
+    # Fetching friends in both directions
+    friends = db.session.query(User).filter(
+        (User.id == Friend.friend_id) & (Friend.user_id == current_user.id) & (Friend.status == 'accepted') |
+        (User.id == Friend.user_id) & (Friend.friend_id == current_user.id) & (Friend.status == 'accepted')
+    ).distinct().all()
+
+    pending_user_requests = [(User.query.get(req.user_id), req) for req in pending_requests]
+    return render_template('friends.html', form=form, friends=friends,
+                           pending_user_requests=pending_user_requests)
+
+@app.route('/accept_friend/<int:friend_id>')
+@login_required
+def accept_friend(friend_id):
+    friend_requests = Friend.query.filter_by(user_id=friend_id, friend_id=current_user.id, status='pending').first()
+    if friend_requests:
+        friend_requests.status = 'accepted'
+        db.session.commit()
+        flash('Friend request accepted!', 'success')
+    return redirect(url_for('friends'))
+
+@app.route('/decline_friend/<int:friend_id>')
+@login_required
+def decline_friend(friend_id):
+    friend_request = Friend.query.filter_by(user_id=friend_id, friend_id=current_user.id, status='pending').first()
+    if friend_request:
+        db.session.delete(friend_request)
+        db.session.commit()
+        flash('Friend request declined.', 'success')
+    return redirect(url_for('friends'))
+
+
+    return redirect(url_for('friends'))
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

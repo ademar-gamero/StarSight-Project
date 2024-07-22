@@ -1,0 +1,82 @@
+{% extends "basic_layout.html" %}
+
+{% block content %}
+<h1>Friends</h1>
+<body style="background-color: black">
+</body>
+<!-- Display Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="container mt-4">
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+<!-- Tabs Navigation -->
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <a class="nav-link active" id="view-friends-tab" data-bs-toggle="tab" href="#view-friends" role="tab" aria-controls="view-friends" aria-selected="true">View All Friends</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" id="add-friends-tab" data-bs-toggle="tab" href="#add-friends" role="tab" aria-controls="add-friends" aria-selected="false">Add Friends</a>
+    </li>
+    <li class="nav-item" role="presentation">
+        <a class="nav-link" id="pending-requests-tab" data-bs-toggle="tab" href="#pending-requests" role="tab" aria-controls="pending-requests" aria-selected="false">Pending Requests</a>
+    </li>
+</ul>
+
+<div class="tab-content" id="myTabContent">
+    <!-- View All Friends Tab -->
+    <div class="tab-pane fade show active" id="view-friends" role="tabpanel" aria-labelledby="view-friends-tab">
+        <section id="friends-list" class="mt-3">
+            <h2>Your Friends</h2>
+            <ul class="list-group">
+                {% for user in friends %}
+                    <li class="list-group-item">Username: {{ user.username }}</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
+
+    <!-- Add Friends Tab -->
+    <div class="tab-pane fade" id="add-friends" role="tabpanel" aria-labelledby="add-friends-tab">
+        <section id="add-friend" class="mt-3">
+            <h2>Add a Friend</h2>
+            <form method="POST" action="{{ url_for('friends') }}">
+                {{ form.hidden_tag() }}
+                <div class="mb-3">
+                    {{ form.friend_username.label }} {{ form.friend_username(class="form-control") }}
+                </div>
+                <div class="mb-3">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <!-- Pending Requests Tab -->
+    <div class="tab-pane fade" id="pending-requests" role="tabpanel" aria-labelledby="pending-requests-tab">
+        <section id="pending-requests" class="mt-3">
+            <h2>Pending Friend Requests</h2>
+            <ul class="list-group">
+                {% for user, request in pending_user_requests %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ user.username }}
+                        <span>
+                            <a href="{{ url_for('accept_friend', friend_id=request.user_id) }}" class="btn btn-success btn-sm">Accept</a>
+                            <a href="{{ url_for('decline_friend', friend_id=request.user_id) }}" class="btn btn-danger btn-sm">Decline</a>
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
+</div>
+
+{% endblock %}

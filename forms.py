@@ -19,3 +19,6 @@ class RegistrationForm(FlaskForm):
                                      #validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
 
+class AddFriendForm(FlaskForm):
+    friend_username = StringField('Friend Username', validators=[DataRequired(), Length(min=2, max=20)])
+    submit = SubmitField('Add Friend')
