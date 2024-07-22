@@ -11,19 +11,33 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Text
 from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.utils import secure_filename
+from inference_sdk import InferenceHTTPClient
 
-from forms import LocationForm, RegistrationForm
+
+from forms import LocationForm, RegistrationForm, AddFriendForm, UploadPhotoForm
+
+from datetime import datetime
 from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
 from constellation import ConstellationCalculator
 import secrets
 import os
 
-
 nest_asyncio.apply()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
+
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Initialize Roboflow client
+CLIENT = InferenceHTTPClient(
+    api_url="https://detect.roboflow.com",
+    api_key=os.getenv("ROBOFLOW_API_KEY")
+)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -72,6 +86,18 @@ class Location(db.Model):
                 'longitude': float(self.longitude),
                 'elevation': float(self.elevation) if self.elevation else None
                 }
+    
+    
+class Friend(db.Model):
+    id = db.Column(db.Integer, primary_key=True) #Primary key for Friend table
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id')) #Foreign key column linking User tbale, id of user who sent the request
+    friend_id = db.Column(db.Integer, nullable=False) #A column for the ID of user who recieved the friend request
+    status = db.Column(db.String(20), nullable=True) # 'pending', 'accepted'
+    friend = db.relationship('User', backref='friend') #establish relationship to the user, specifically person who received request
+
+    def __repr__(self):
+        return f"Friendship('{self.user_id}', '{self.friend_id}', '{self.status}')"
+
 
 class Constellation(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -81,7 +107,6 @@ class Constellation(db.Model):
 
     def __repr__(self):
         return f"Constellation({self.name})"
-
 
 def populate_constellations_table():
     constellations = [
@@ -95,6 +120,19 @@ def populate_constellations_table():
         constellation = Constellation(name=entry["name"],description=entry["description"],img=entry["img"])
         db.session.add(constellation)
     db.session.commit()
+
+class Reviews(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.today())
+    # foreign keys to reference users and locations
+    location_id = db.Column(db.Integer, db.ForeignKey('location.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+
+# password = generate_password_hash("password")
+
 
 with app.app_context():
     db.create_all()
@@ -418,5 +456,106 @@ def calculate_results(latitude, longitude):
     #basically sends a POST request for database
     #if successful we send the data into the html file
 
+
+@app.route('/upload_photo', methods=['GET', 'POST'])
+@login_required
+def upload_photo():
+    if request.method == 'POST':
+        if 'photo' not in request.files:
+            flash('No file part')
+            return redirect(request.url)
+        file = request.files['photo']
+        if file.filename == '':
+            flash('No selected file')
+            return redirect(request.url)
+        if file:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            constellations = detect_constellations(filepath)
+            session['constellations'] = constellations
+            return redirect(url_for('constellation_results'))
+    return render_template('upload_photo.html')
+
+@app.route('/constellation_results')
+@login_required
+def constellation_results():
+    constellations = session.get('constellations', [])
+    return render_template('constellation_results.html', constellations=constellations)
+
+def detect_constellations(filepath):
+    result = CLIENT.infer(filepath, model_id="constellation-dsphi/1")
+    detections = result['predictions']
+    constellations = [det['class'] for det in detections]
+    return constellations
+
+@app.route('/friends', methods=["GET", "POST"])
+@login_required
+def friends():
+    form = AddFriendForm()
+    if form.validate_on_submit():
+        friend = User.query.filter_by(username=form.friend_username.data).first()
+        if friend and friend.id != current_user.id:
+            existing_friendship = Friend.query.filter_by(user_id=current_user.id, friend_id=friend.id).first()
+            if not existing_friendship:
+                new_friend = Friend(user_id=current_user.id, friend_id=friend.id, status="pending")
+                db.session.add(new_friend)
+                db.session.commit()
+                flash('Friend request sent!', 'success')
+            else:
+                flash('Friend request already exists!', 'danger')
+        else:
+            flash('User not found or trying to friend yourself.', 'danger')
+
+    pending_requests = Friend.query.filter_by(friend_id=current_user.id, status='pending').all()
+
+    # Fetching friends in both directions
+    friends = db.session.query(User).filter(
+        (User.id == Friend.friend_id) & (Friend.user_id == current_user.id) & (Friend.status == 'accepted') |
+        (User.id == Friend.user_id) & (Friend.friend_id == current_user.id) & (Friend.status == 'accepted')
+    ).distinct().all()
+
+    pending_user_requests = [(User.query.get(req.user_id), req) for req in pending_requests]
+    return render_template('friends.html', form=form, friends=friends,
+                           pending_user_requests=pending_user_requests)
+
+@app.route('/accept_friend/<int:friend_id>')
+@login_required
+def accept_friend(friend_id):
+    friend_requests = Friend.query.filter_by(user_id=friend_id, friend_id=current_user.id, status='pending').first()
+    if friend_requests:
+        friend_requests.status = 'accepted'
+        db.session.commit()
+        flash('Friend request accepted!', 'success')
+    return redirect(url_for('friends'))
+
+@app.route('/decline_friend/<int:friend_id>')
+@login_required
+def decline_friend(friend_id):
+    friend_request = Friend.query.filter_by(user_id=friend_id, friend_id=current_user.id, status='pending').first()
+    if friend_request:
+        db.session.delete(friend_request)
+        db.session.commit()
+        flash('Friend request declined.', 'success')
+    return redirect(url_for('friends'))
+
+    return redirect(url_for('friends'))
+
+# reviews code
+# TODO: make reviews dynamic for locations
+@app.route('/reviews')
+def location_reviews():
+    reviews = Reviews.query.all()
+    return render_template('reviews.html', reviews=reviews)
+
+@app.route('/submit_review', methods=['POST'])
+def submit_review():
+    rating = int(request.form['rating'])
+    comment = request.form['comment']
+    new_review = Reviews(rating=rating, comment=comment)
+    db.session.add(new_review)
+    db.session.commit()
+    return redirect(url_for('review'))
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True,host="0.0.0.0")
