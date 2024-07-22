@@ -6,8 +6,8 @@ from datetime import date
 
 class ConstellationCalculator():
     def __init__(self, loc):
-        self.loc_lat = loc[0]
-        self.loc_lng = loc[1]
+        self.loc_lat = loc["lat"]
+        self.loc_lng = loc["lng"]
         self.date = date.today()
 
     def find_constellations(self):

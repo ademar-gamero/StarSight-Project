@@ -115,6 +115,21 @@ def populate_constellations_table():
                 "description": "Orion is a prominent set of stars most visible during winter in the northern celestial hemisphere. It is one of the 88 modern constellations; it was among the 48 constellations listed by the 2nd-century astronomer Ptolemy. It is named for a hunter in Greek mythology.",
                 "img":"orion.jpg"
                 },
+                {   
+                "name":"Ursa Major",
+                "description": "Ursa Major (also known as the Great Bear) is a constellation in the northern sky, whose associated mythology likely dates back into prehistory. Its Latin name means greater (or larger) bear, referring to and contrasting it with nearby Ursa Minor, the lesser bear.",
+                "img":"Ursa Major.jpg"
+                },
+                {   
+                "name":"Hercules",
+                "description": "Hercules is a constellation named after Hercules, the Roman mythological hero adapted from the Greek hero Heracles. Hercules was one of the 48 constellations listed by the second-century astronomer Ptolemy, and it remains one of the 88 modern constellations today. It is the fifth-largest of the modern constellations and is the largest of the 50 which have no stars brighter than apparent magnitude +2.5.",
+                "img":"Hercules.jpg"
+                },
+                {   
+                "name":"Hercules",
+                "description": "Hercules is a constellation named after Hercules, the Roman mythological hero adapted from the Greek hero Heracles. Hercules was one of the 48 constellations listed by the second-century astronomer Ptolemy, and it remains one of the 88 modern constellations today. It is the fifth-largest of the modern constellations and is the largest of the 50 which have no stars brighter than apparent magnitude +2.5.",
+                "img":"Hercules.jpg"
+                },
             ]
     for entry in constellations:
         constellation = Constellation(name=entry["name"],description=entry["description"],img=entry["img"])
@@ -144,6 +159,10 @@ with app.app_context():
         test_1 = Location(name="test_db_5",reviewer_count=5,latitude=43.982465,longitude=-89.078786,address=address)
         db.session.add(test_1)
         db.session.commit()
+
+def clear_session():
+    session["location"] = []
+    session["optimal_locs"] = []
 
 @login_manager.user_loader
 def load_user_from_db(user_id):
@@ -177,6 +196,7 @@ def login():
 @login_required
 def logout():
     logout_user()
+    clear_session()
     return redirect(url_for('login'))
 
 @app.route("/main_menu")
@@ -216,15 +236,18 @@ async def process_loc(loc,single):
     local = await city.get_nearby_cities()
     await city.city_calculate(loc_score,local)
     await city.calculate_elevation(loc_score)
-    weather_response = WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
-    moon_illum = WeatherAPI.return_moon_illumination(weather_response)
+    weather_response = await WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
+    if weather_response is None:
+        print("Weather Response was not returned")
+        return None
+    moon_illum = await WeatherAPI.return_moon_illumination(weather_response)
     moon_deduction = WeatherAPI.calculate_moon_deduction(moon_illum)
-    weather_deduction = WeatherAPI.get_weather_score(weather_response)
+    weather_deduction = await WeatherAPI.get_weather_score(weather_response)
     loc_score.lower_score(weather_deduction)
     loc_score.moon_light_pollution -= moon_deduction
     if loc_score.score >= 3 or single == True: #dont forget to change back
-       weather_rep = WeatherAPI.return_weather_report(weather_response)
-       lunar_phase = WeatherAPI.return_moon_phase(weather_response)
+       weather_rep = await WeatherAPI.return_weather_report(weather_response)
+       lunar_phase = await WeatherAPI.return_moon_phase(weather_response)
        optimal_loc = ({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),'ranking_score':loc_score.score,
                             'light_ranking':loc_score.return_current_light_pollution_str(), 'weather_report':weather_rep,
                             'lunar_phase':lunar_phase, 'lunar_impact':loc_score.moon_light_pollution_card[loc_score.moon_light_pollution]})
@@ -233,7 +256,6 @@ async def process_loc(loc,single):
 
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
-    session["current_result"] = None
     popular_markers = []
     for location in Location.query.filter(Location.reviewer_count >= 5).all():
         popular_markers.append(location.loc_to_dict()) 
@@ -255,7 +277,7 @@ def find_stars():
            loc_lng = v_processed["lng"]
            loc_lat = float(loc_lat)
            loc_lng = float(loc_lng)
-           point = [loc_lat,loc_lng]
+           point = {"lat":loc_lat,"lng":loc_lng}
            ovrl_ranking = v_processed["ranking"]
            light_ranking = v_processed["light_ranking"]
            weather_report = v_processed["weather_report"]
@@ -264,7 +286,9 @@ def find_stars():
            l_phase = v_processed["lunar_phase"]
            l_score = v_processed["lunar_impact"]
            return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase,lunar_impact=l_score))
+
        session.pop("optimal_locs",[])
+
        search_radius = form.loc_radius.data
        lat = request.form.get('lat')
        lng = request.form.get('lng')
@@ -408,7 +432,7 @@ def find_constellations(latitude,longitude):
     lat = float(latitude)
     lng = float(longitude)
     display_constellations = []
-    loc = (lat,lng)
+    loc = {"lat":lat,"lng":lng}
     session["location"] = loc
     calc = ConstellationCalculator(loc)
     constellations = calc.find_constellations()
@@ -422,9 +446,7 @@ def find_constellations(latitude,longitude):
 
 @app.route('/<latitude>/<longitude>/results')
 def calculate_results(latitude, longitude):
-    lat = float(latitude)
-    lng = float(longitude)
-    loc = {"lat":lat,"lng":lng,"label":1}
+    loc = {"lat":latitude,"lng":longitude,"label":1}
     session["location"] = loc
     ranking = None
     light_ranking = None
