@@ -58,8 +58,6 @@ class DB():
 
 class CityAPI():
     def __init__(self, latitude, longitude):
-        latitude = float(latitude)
-        longitude = float(longitude)
         self.location_latitude = latitude 
         self.location_longitude = longitude
         self.radius = 20
