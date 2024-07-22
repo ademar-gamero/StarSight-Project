@@ -145,6 +145,10 @@ with app.app_context():
         db.session.add(test_1)
         db.session.commit()
 
+def clear_session():
+    session["location"] = []
+    session["optimal_locs"] = []
+
 @login_manager.user_loader
 def load_user_from_db(user_id):
     return User.query.get(int(user_id))
@@ -177,6 +181,7 @@ def login():
 @login_required
 def logout():
     logout_user()
+    clear_session()
     return redirect(url_for('login'))
 
 @app.route("/main_menu")
