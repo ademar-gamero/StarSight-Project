@@ -663,7 +663,7 @@ def reviews(address, longitude, latitude):
         )
     ).first()
 
-    if not location:
+    if location.reviewer_count == 0:
         flash("Location not found", "error")
         return redirect(url_for("find_stars"))
     
@@ -681,6 +681,7 @@ def submit_review(address, longitude, latitude):
         )
     ).first()
     if not location:
+        location.reviewer_count += 1
         flash("Location not found", "error")
         return redirect(url_for("find_stars"))
     
@@ -692,6 +693,7 @@ def submit_review(address, longitude, latitude):
         location_id=location.id,
         user_id = curr_user.id
     )
+    location.reviewer_count += 1
     db.session.add(new_review)
     db.session.commit()
     flash("Your review has been submitted successfully!", "success")
