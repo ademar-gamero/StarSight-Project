@@ -4,7 +4,9 @@ import json
 import os
 
 class WeatherAPI:
+
     # Method which returns points based on the average cloud coverage percentage
+    @staticmethod
     def point_count(avg):
         if avg >= 0 and avg <= 25:
             return 0
@@ -65,6 +67,7 @@ class WeatherAPI:
         print(moon_illumination)
         return moon_illumination
 
+    @staticmethod
     def calculate_moon_deduction(moon_illum):
         if 75 > moon_illum > 45:
             return 1
