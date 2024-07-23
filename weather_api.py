@@ -52,9 +52,6 @@ class WeatherAPI:
             weather_report.append((curr['time'], curr['condition']['text']))
         return weather_report
 
-    # called from main
-    @staticmethod
-    async def print_moon_phase(response):
     @staticmethod
     async def print_moon_phase(response):
         moon_phase = response['forecast']['forecastday'][0]['astro']['moon_phase'] 
