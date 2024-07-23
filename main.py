@@ -411,9 +411,11 @@ def find_constellations(latitude,longitude):
     constellations = calc.find_constellations()
     print(constellations)
     for constellation in constellations:
-        db_constellation = Constellation.query.filter_by(name=constellation).first()
-        if db_constellation:
-            display_constellations.append({"name":db_constellation.name,"img":db_constellation.img,"description":db_constellation.description})
+        print(constellations[constellation])
+        if constellations[constellation] >= 7:
+            db_constellation = Constellation.query.filter_by(name=constellation).first()
+            if db_constellation:
+                display_constellations.append({"name":db_constellation.name,"img":db_constellation.img,"description":db_constellation.description})
     return render_template("find_constellations.html", constellations=display_constellations)
              
 
