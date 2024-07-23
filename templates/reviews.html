@@ -1,54 +1,51 @@
-<!-- templates/reviews.html -->
+{% extends "basic_layout.html" %}
+{% block content %}
+<html>
+    <head>
+        <title>Reviews</title>
+        <style>
+            .star {
+                color: gold;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Location Reviews</h1>
+        <!-- Form to submit new review-->
+        <form method="POST" action="{{ url_for('submit_review')}}">
+            <label for="rating">Rating (1 - 5):</label>
+            <input type="range" id="rating" name="rating" min="1" max="5" value="5" oninput="this.nextElementSibling.value=this.value" required>
+            <output>5</output>
+            <br>
+            <label for="comment">Comment:</label>
+            <textarea name="comment" id="comment" rows="5" cols="50" required></textarea>
+            <br>
+            <button type="submit">Submit Review</button>
+        </form>
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reviews</title>
-    <style>
-        .review {
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        .stars {
-            color: gold;
-        }
-    </style>
-</head>
-<body>
-    <h1>Customer Reviews</h1>
-    
-    <!-- Form to submit a new review -->
-    <form method="POST" action="{{ url_for('submit_review') }}">
-        <label for="rating">Rating (1-5):</label>
-        <input type="range" id="rating" name="rating" min="1" max="5" value="5" oninput="this.nextElementSibling.value=this.value" required>
-        <output>5</output>
-        <br>
-        <label for="comment">Comment:</label>
-        <textarea id="comment" name="comment" rows="4" cols="50" required></textarea>
-        <br>
-        <button type="submit">Submit Review</button>
-    </form>
-    
     <hr>
-    
+
     <!-- Display existing reviews -->
-    {% for review in reviews %}
-    <div class="review">
-        <div>
-            Rating:
-            {% for _ in range(review.rating) %}
-            <span class="stars">★</span>
-            {% endfor %}
-            {% for _ in range(5 - review.rating) %}
-            <span class="stars">☆</span>
-            {% endfor %}
+     {% if reviews %}
+        {% for review in reviews %}
+        <div class="review">
+            <div>
+                Rating:
+                {% for _ in range(review.rating) %}
+                <span class="stars">★</span>
+                {% endfor %}
+                {% for _ in range(5 - review.rating) %}
+                <span class="stars">☆</span>
+                {% endfor %}
+            </div>
+            <div>{{ review.comment }}</div>
+            <div>{{ review.date.date() }}</div>
         </div>
-        <div>{{ review.comment }}</div>
-        <div>{{ review.date.date() }}</div>
-    </div>
-    {% endfor %}
-</body>
+        {% endfor %}
+    {% else %}
+        <p>There are no reviews for this location yet.</p>
+    {% endif %}
+    </body>
 </html>
+
+{% endblock %}
