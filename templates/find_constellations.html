@@ -1,53 +1,67 @@
 {% extends "basic_layout.html" %}
+
 {% block content %}
 <style>
-  .constellation{
+  h1 {
+    color: #202F5A;
+    text-transform: uppercase;
+    font-size: x-large;
+    font-weight: bold;
+    text-shadow: none;
+    font-size: xx-large;
+    margin: 10px;
+  }
+  h4 {
+    font-weight: bold;
+    color: #202F5A;
+  }
+  .constellation {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 60px;
   }
-  .constellation-content{
+  .constellation-content {
     display: flex;
     align-items: flex-start;
     width: 100%;
     max-width: 1200px;
   }
-  .constellation img{
-    margin-right: 20px;
-    width:100%;
+  .constellation img {
+    margin-right: 15px;
+    width: 100%;
     max-width: 500px;
     height: auto;
   }
-  .text-container{
+  .text-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
     width: 50%;
+    margin-right: 35px;
   }
-  
-  .constellation h4{
+  .constellation h4 {
     margin: 0 0 15px 0;
     font-size: 24px;
   }
-  .constellation p{
+  .constellation p {
     margin: 0;
     text-align: justify;
   }
-</style
-  <body>
-    <h1 style="margin-bottom:40px;"> Constellations! </h1>
-    {%for constellation in constellations%}
-      <div class="constellation">
-        <div class="constellation-content">
-          <div class="text-container">
-            <h4>{{constellation["name"]}}</h4>
-            <p>{{constellation["description"]}}</p>
-          </div>
-          <img src={{ url_for('static', filename = '/images/constellations/'+constellation['img'])}} 
-          width="500" height="500" alt="{{constellation["name"]}}" border="0"> 
+</style>
+<body>
+  <h1 style="margin-bottom: 40px;">Constellations!</h1>
+  {% for constellation in constellations %}
+    <div class="constellation">
+      <div class="constellation-content">
+        <div class="text-container">
+          <h4>{{ constellation["name"] }}</h4>
+          <p>{{ constellation["description"] }}</p>
         </div>
+        <img src="{{ url_for('static', filename='images/constellations/' + constellation['img']) }}" 
+             width="500" height="auto" alt="{{ constellation["name"] }}" border="0">
       </div>
-    {% endfor %}
-  </body>
+    </div>
+  {% endfor %}
+</body>
 {% endblock %}
