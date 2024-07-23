@@ -20,7 +20,7 @@ from forms import LocationForm, RegistrationForm, AddFriendForm, UploadPhotoForm
 from datetime import datetime
 from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
-from constellation import ConstellationCalculator
+from constellation import ConstellationCalculator, populate_constellations_table
 import secrets
 import os
 
@@ -108,33 +108,6 @@ class Constellation(db.Model):
     def __repr__(self):
         return f"Constellation({self.name})"
 
-def populate_constellations_table():
-    constellations = [
-                {   
-                "name":"Orion",
-                "description": "Orion is a prominent set of stars most visible during winter in the northern celestial hemisphere. It is one of the 88 modern constellations; it was among the 48 constellations listed by the 2nd-century astronomer Ptolemy. It is named for a hunter in Greek mythology.",
-                "img":"orion.jpg"
-                },
-                {   
-                "name":"Ursa Major",
-                "description": "Ursa Major (also known as the Great Bear) is a constellation in the northern sky, whose associated mythology likely dates back into prehistory. Its Latin name means greater (or larger) bear, referring to and contrasting it with nearby Ursa Minor, the lesser bear.",
-                "img":"Ursa Major.jpg"
-                },
-                {   
-                "name":"Hercules",
-                "description": "Hercules is a constellation named after Hercules, the Roman mythological hero adapted from the Greek hero Heracles. Hercules was one of the 48 constellations listed by the second-century astronomer Ptolemy, and it remains one of the 88 modern constellations today. It is the fifth-largest of the modern constellations and is the largest of the 50 which have no stars brighter than apparent magnitude +2.5.",
-                "img":"Hercules.jpg"
-                },
-                {   
-                "name":"Hercules",
-                "description": "Hercules is a constellation named after Hercules, the Roman mythological hero adapted from the Greek hero Heracles. Hercules was one of the 48 constellations listed by the second-century astronomer Ptolemy, and it remains one of the 88 modern constellations today. It is the fifth-largest of the modern constellations and is the largest of the 50 which have no stars brighter than apparent magnitude +2.5.",
-                "img":"Hercules.jpg"
-                },
-            ]
-    for entry in constellations:
-        constellation = Constellation(name=entry["name"],description=entry["description"],img=entry["img"])
-        db.session.add(constellation)
-    db.session.commit()
 
 class Reviews(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -152,7 +125,7 @@ class Reviews(db.Model):
 with app.app_context():
     db.create_all()
     if Constellation.query.first() is None:
-        populate_constellations_table()
+        populate_constellations_table(db,Constellation)
 
     address = "testing"
     if Location.query.filter_by(latitude=43.982465, longitude=-89.078786,reviewer_count=5).first() == None:
