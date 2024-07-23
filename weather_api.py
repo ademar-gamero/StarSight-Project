@@ -55,6 +55,8 @@ class WeatherAPI:
     # called from main
     @staticmethod
     async def print_moon_phase(response):
+    @staticmethod
+    async def print_moon_phase(response):
         moon_phase = response['forecast']['forecastday'][0]['astro']['moon_phase'] 
         print(moon_phase)
 
@@ -88,8 +90,29 @@ class WeatherAPI:
     async def get_weather_response(latitude,longitude):
         print(latitude)
         print(longitude)
+    @staticmethod
+    async def get_weather_response(latitude,longitude):
+        print(latitude)
+        print(longitude)
         my_api_key = os.getenv('API_KEY')
         url = "http://api.weatherapi.com/v1//forecast.json"
+        location = f"{latitude},{longitude}"
+        params = {
+                  'key': my_api_key,
+                  'q': location,
+                  'days': '2'
+                  }
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url,params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'error' in data:
+                        print(data['error']['message'])
+                        return None
+                    return data
+                else:
+                    print(f"Error: HTTP {response.status}")
+                    return None
         location = f"{latitude},{longitude}"
         params = {
                   'key': my_api_key,
