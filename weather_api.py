@@ -1,10 +1,13 @@
 import requests
 import aiohttp
+import aiohttp
 import json
 import os
 
 class WeatherAPI:
+
     # Method which returns points based on the average cloud coverage percentage
+    @staticmethod
     def point_count(avg):
         if avg >= 0 and avg <= 25:
             return 0
@@ -65,6 +68,7 @@ class WeatherAPI:
         print(moon_illumination)
         return moon_illumination
 
+    @staticmethod
     def calculate_moon_deduction(moon_illum):
         if 75 > moon_illum > 45:
             return 1
@@ -85,8 +89,29 @@ class WeatherAPI:
     async def get_weather_response(latitude,longitude):
         print(latitude)
         print(longitude)
+    @staticmethod
+    async def get_weather_response(latitude,longitude):
+        print(latitude)
+        print(longitude)
         my_api_key = os.getenv('API_KEY')
         url = "http://api.weatherapi.com/v1//forecast.json"
+        location = f"{latitude},{longitude}"
+        params = {
+                  'key': my_api_key,
+                  'q': location,
+                  'days': '2'
+                  }
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url,params=params) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    if 'error' in data:
+                        print(data['error']['message'])
+                        return None
+                    return data
+                else:
+                    print(f"Error: HTTP {response.status}")
+                    return None
         location = f"{latitude},{longitude}"
         params = {
                   'key': my_api_key,
