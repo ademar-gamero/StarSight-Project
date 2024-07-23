@@ -78,6 +78,7 @@
 <body>
     <div class="container">
         <h1>Star Gazing Forecast</h1>
+<a href="{{ url_for('find_constellations', latitude=point["lat"], longitude=point["lng"]) }}"> Find Constellations! </a>
        {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
               <div class="container mt-4">
@@ -90,7 +91,8 @@
               </div>
           {% endif %}
       {% endwith %}   
-        <h2> Your Location: {{point[0]}},{{point[1]}} <h2>
+        <h2> Location Address: {{address}} </h2>
+        <h2> Location Coordinates: {{point["lat"]}},{{point["lng"]}}</h2>
         <div class="section">
             <div class="section-title">Starlight Ranking</div>
                 <div class="section-content">
@@ -109,6 +111,12 @@
                 <div class="section-title">Lunar Phase</div>
                 <div class="section-content">
                     <p>{{ lunar_phase }}</p>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-title">Lunar Light Impact</div>
+                <div class="section-content">
+                    <p>{{ lunar_impact }}</p>
                 </div>
             </div>
         </div>
@@ -134,8 +142,8 @@
       <form action="" method="POST">
         <label for="nameLabel"> Enter Name</label>
         <input type="text" id="nameLabel" name="name">
-        <input type="hidden" name="hidden_lat" value="{{point[0]}}">
-        <input type="hidden" name="hidden_lng" value="{{point[1]}}">
+        <input type="hidden" name="hidden_lat" value="{{point["lat"]}}">
+        <input type="hidden" name="hidden_lng" value="{{point["lng"]}}">
         <input type="submit" value="Save Location!">
       </form>
     </div>

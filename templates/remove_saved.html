@@ -1,0 +1,15 @@
+{% extends "basic_layout.html" %}
+{% block content %}
+  <body>
+  <form action="" method="POST">
+    <p> Are you sure you want to remove this location </p>
+    <p> {{location["address"]}} </p>
+    <input type="radio" id="yes_btn" name="answer" value="yes">
+      <label for="yes_btn"> Yes! </label>
+    <input type="radio" id="no_btn" name="answer" value="no">
+      <label for="no_btn"> No! </label>
+      <br>
+    <input type="submit"></input>
+  </form>
+</body>
+{% endblock %}
