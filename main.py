@@ -9,7 +9,7 @@ import nest_asyncio
 from flask import Flask, render_template, url_for, flash, redirect, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Text
+from sqlalchemy import Text, and_
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.utils import secure_filename
 from inference_sdk import InferenceHTTPClient
@@ -276,7 +276,7 @@ def find_stars():
         flash("Please select a location from the interactive map or enter a valid latitude/longitude manually")
         return render_template("find_stars.html", form=form, map_api_key = api_key,map_id=map_id,usr_coords = zoom_coords,markers=[])
 
-       origin = (lat,lng)
+       origin = (float(lat), float(lng))
        nearby_locs = cur_usr.calculate_nearby_locs([], origin, search_radius)
        optimal_locs = []
        loop = asyncio.get_event_loop()
@@ -653,20 +653,49 @@ def remove_shared_location(location_id):
 
 # reviews code
 # TODO: make reviews dynamic for locations
-@app.route('/reviews/<marker_id>')
-def reviews(marker_id):
-    reviews = Reviews.query.filter_by(location_id=int(marker_id)).order_by(Reviews.date.desc()).all()
-    return render_template('reviews.html', reviews=reviews)
+@app.route('/reviews/<address>/<longitude>/<latitude>')
+def reviews(address, longitude, latitude):
+    location = Location.query.filter(
+        and_(
+            Location.address == address,
+            Location.longitude == longitude,
+            Location.latitude == latitude
+        )
+    ).first()
+
+    if not location:
+        flash("Location not found", "error")
+        return redirect(url_for("find_stars"))
+    
+    reviews = Reviews.query.filter_by(location_id=location.id).order_by(Reviews.date.desc()).all()
+    return render_template('reviews.html', location=location, reviews=reviews)
 
 
-@app.route('/submit_review/<marker_id>', methods=['POST'])
-def submit_review(marker_id):
+@app.route('/submit_review/<address>/<longitude>/<latitude>', methods=['POST'])
+def submit_review(address, longitude, latitude):
+    location = Location.query.filter(
+        and_(
+            Location.address == address,
+            Location.longitude == longitude,
+            Location.latitude == latitude
+        )
+    ).first()
+    if not location:
+        flash("Location not found", "error")
+        return redirect(url_for("find_stars"))
+    
     rating = int(request.form['rating'])
     comment = request.form['comment']
-    new_review = Reviews(rating=rating, comment=comment, location_id=int(marker_id))
+    new_review = Reviews(
+        rating=rating, 
+        comment=comment, 
+        location_id=location.id,
+        user_id = curr_user.id
+    )
     db.session.add(new_review)
     db.session.commit()
-    return redirect(url_for('review'))
+    flash("Your review has been submitted successfully!", "success")
+    return redirect(url_for('review', address=address, longitude=longitude, latitude=latitude))
 
 
 if __name__ == "__main__":
