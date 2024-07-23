@@ -13,31 +13,32 @@ from sqlalchemy import Text
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.utils import secure_filename
 from inference_sdk import InferenceHTTPClient
-
-
 from forms import LocationForm, RegistrationForm, AddFriendForm, UploadPhotoForm
 
-from datetime import datetime
 from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
-from constellation import ConstellationCalculator
+from constellation import ConstellationCalculator, populate_constellations_table
 import secrets
 import os
+
+
+from datetime import datetime
+from roboflow import Roboflow
+import supervision as sv
+import cv2
+import numpy as np
+
+
 
 nest_asyncio.apply()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
 
-UPLOAD_FOLDER = 'uploads'
+STATIC_FOLDER = 'static'
+UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Initialize Roboflow client
-CLIENT = InferenceHTTPClient(
-    api_url="https://detect.roboflow.com",
-    api_key=os.getenv("ROBOFLOW_API_KEY")
-)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -109,19 +110,6 @@ class Constellation(db.Model):
     def __repr__(self):
         return f"Constellation({self.name})"
 
-def populate_constellations_table():
-    constellations = [
-                {   
-                "name":"Orion",
-                "description": "Orion is a prominent set of stars most visible during winter in the northern celestial hemisphere. It is one of the 88 modern constellations; it was among the 48 constellations listed by the 2nd-century astronomer Ptolemy. It is named for a hunter in Greek mythology.",
-                "img":"orion.jpg"
-                },
-            ]
-    for entry in constellations:
-        constellation = Constellation(name=entry["name"],description=entry["description"],img=entry["img"])
-        db.session.add(constellation)
-    db.session.commit()
-
 class Reviews(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rating = db.Column(db.Integer, nullable=False)
@@ -138,13 +126,17 @@ class Reviews(db.Model):
 with app.app_context():
     db.create_all()
     if Constellation.query.first() is None:
-        populate_constellations_table()
+        populate_constellations_table(db,Constellation)
 
     address = "testing"
     if Location.query.filter_by(latitude=43.982465, longitude=-89.078786,reviewer_count=5).first() == None:
         test_1 = Location(name="test_db_5",reviewer_count=5,latitude=43.982465,longitude=-89.078786,address=address)
         db.session.add(test_1)
         db.session.commit()
+
+def clear_session():
+    session["location"] = []
+    session["optimal_locs"] = []
 
 @login_manager.user_loader
 def load_user_from_db(user_id):
@@ -178,6 +170,7 @@ def login():
 @login_required
 def logout():
     logout_user()
+    clear_session()
     return redirect(url_for('login'))
 
 @app.route("/main_menu")
@@ -212,29 +205,34 @@ def learn_more():
 
 #helper method to process a location
 async def process_loc(loc,single):
+
     loc_score = score1()
     city = CityAPI(loc["lat"],loc["lng"])
     local = await city.get_nearby_cities()
+    address = await city.retrieve_address()
     await city.city_calculate(loc_score,local)
     await city.calculate_elevation(loc_score)
-    weather_response = WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
-    moon_illum = WeatherAPI.return_moon_illumination(weather_response)
+    weather_response = await WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
+    if weather_response is None:
+        print("Weather Response was not returned")
+        return None
+    moon_illum = await WeatherAPI.return_moon_illumination(weather_response)
     moon_deduction = WeatherAPI.calculate_moon_deduction(moon_illum)
-    weather_deduction = WeatherAPI.get_weather_score(weather_response)
+    weather_deduction = await WeatherAPI.get_weather_score(weather_response)
     loc_score.lower_score(weather_deduction)
     loc_score.moon_light_pollution -= moon_deduction
+
     if loc_score.score >= 3 or single == True: #dont forget to change back
-       weather_rep = WeatherAPI.return_weather_report(weather_response)
-       lunar_phase = WeatherAPI.return_moon_phase(weather_response)
+       weather_rep = await WeatherAPI.return_weather_report(weather_response)
+       lunar_phase = await WeatherAPI.return_moon_phase(weather_response)
        optimal_loc = ({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),'ranking_score':loc_score.score,
                             'light_ranking':loc_score.return_current_light_pollution_str(), 'weather_report':weather_rep,
-                            'lunar_phase':lunar_phase, 'lunar_impact':loc_score.moon_light_pollution_card[loc_score.moon_light_pollution]})
+                       'lunar_phase':lunar_phase, 'lunar_impact':loc_score.moon_light_pollution_card[loc_score.moon_light_pollution], 'address':address})
        return optimal_loc
     return None
 
 @app.route("/find_stars", methods=['GET','POST'])
 def find_stars():
-    session["current_result"] = None
     popular_markers = []
     for location in Location.query.filter(Location.reviewer_count >= 5).all():
         popular_markers.append(location.loc_to_dict()) 
@@ -244,6 +242,7 @@ def find_stars():
         zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     else:
         zoom_coords = {"lat":37.263056,"lng":-115.79302}
+
     form = LocationForm()
     api_key = os.environ.get('GOOGLE_KEY') 
     map_id = os.environ.get('GOOGLE_ID')
@@ -262,10 +261,13 @@ def find_stars():
            weather_report = v_processed["weather_report"]
            session["weather_report"] = weather_report
            session["location"] = point
+           session["address"] = v_processed["address"]
            l_phase = v_processed["lunar_phase"]
            l_score = v_processed["lunar_impact"]
            return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase,lunar_impact=l_score))
+
        session.pop("optimal_locs",[])
+
        search_radius = form.loc_radius.data
        lat = request.form.get('lat')
        lng = request.form.get('lng')
@@ -324,22 +326,16 @@ def find_stars():
 @app.route("/results/<rating>/<light_rating>/<lunar_phase>/<lunar_impact>",methods=['GET','POST'])
 def results(rating,light_rating,lunar_phase,lunar_impact):
     weather_report = session.get("weather_report", [])
-    point = session.get("location")
-    address = None
-    if point != None:
-        print("running")
+    point = session.get("location", None)
+    address = session["address"]
+    if address == None and point != None:
         calc = CityAPI(point["lat"],point["lng"])
         loc_address = asyncio.run(calc.retrieve_address())
-        address = loc_address['results'][0].get('formatted_address')
+        address = loc_address['results'][0].get('formatted_address') 
     if request.method == "POST":
         lat = request.form.get("hidden_lat")
         lng = request.form.get("hidden_lng")
-        print("coords")
-        print(lat)
-        print(lng)
         user = load_user_from_db(current_user.id)
-        print("user")
-        print(user)
         locations = []
         if user:
             locations = user.saved_locations
@@ -347,7 +343,6 @@ def results(rating,light_rating,lunar_phase,lunar_impact):
             loc_lat = loc.latitude
             loc_lng = loc.longitude
             if str(loc_lat) == lat and str(loc_lng) == lng:
-                print("found error")
                 flash("This location is already saved in the database, error")
                 return render_template("results.html",rating=rating,light_rating=light_rating,weather_report=weather_report,lunar_phase=lunar_phase,
                            point=point,lunar_impact=lunar_impact)
@@ -355,7 +350,6 @@ def results(rating,light_rating,lunar_phase,lunar_impact):
         if lat and lng and name:
             lat = float(lat)
             lng = float(lng)
-            print("found path")
             new_loc = Location(name=name,latitude=lat,longitude=lng,address=address,user=current_user)
             db.session.add(new_loc)
             db.session.commit()
@@ -431,23 +425,23 @@ def find_constellations(latitude,longitude):
     lat = float(latitude)
     lng = float(longitude)
     display_constellations = []
-    loc = (lat,lng)
+    loc = {"lat":lat,"lng":lng}
     session["location"] = loc
     calc = ConstellationCalculator(loc)
     constellations = calc.find_constellations()
     print(constellations)
     for constellation in constellations:
-        db_constellation = Constellation.query.filter_by(name=constellation).first()
-        if db_constellation:
-            display_constellations.append({"name":db_constellation.name,"img":db_constellation.img,"description":db_constellation.description})
+        print(constellations[constellation])
+        if constellations[constellation] >= 7:
+            db_constellation = Constellation.query.filter_by(name=constellation).first()
+            if db_constellation:
+                display_constellations.append({"name":db_constellation.name,"img":db_constellation.img,"description":db_constellation.description})
     return render_template("find_constellations.html", constellations=display_constellations)
              
 
 @app.route('/<latitude>/<longitude>/results')
 def calculate_results(latitude, longitude):
-    lat = float(latitude)
-    lng = float(longitude)
-    loc = {"lat":lat,"lng":lng,"label":1}
+    loc = {"lat":latitude,"lng":longitude,"label":1}
     session["location"] = loc
     ranking = None
     light_ranking = None
@@ -495,8 +489,9 @@ def upload_photo():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            constellations = detect_constellations(filepath)
+            constellations, annotated_image_path = detect_constellations(filepath)
             session['constellations'] = constellations
+            session['annotated_image'] = annotated_image_path
             return redirect(url_for('constellation_results'))
     return render_template('upload_photo.html')
 
@@ -504,13 +499,39 @@ def upload_photo():
 @login_required
 def constellation_results():
     constellations = session.get('constellations', [])
-    return render_template('constellation_results.html', constellations=constellations)
+    annotated_image = session.get('annotated_image', '')
+    return render_template('constellation_results.html', constellations=constellations, annotated_image=annotated_image)
 
 def detect_constellations(filepath):
-    result = CLIENT.infer(filepath, model_id="constellation-dsphi/1")
-    detections = result['predictions']
-    constellations = [det['class'] for det in detections]
-    return constellations
+    rf = Roboflow(api_key="BmaSz5YCzhmjapwU7201")
+    project = rf.workspace().project("constellation-dsphi")
+    model = project.version(1).model
+    result = model.predict(filepath, confidence=40, overlap=30).json()
+
+    boxes = []
+    confidences = []
+    class_ids = []
+    for prediction in result['predictions']:
+        x, y, w, h = prediction['x'], prediction['y'], prediction['width'], prediction['height']
+        boxes.append([x - w/2, y - h/2, x + w/2, y + h/2])
+        confidences.append(prediction['confidence'])
+        class_ids.append(prediction['class_id'])
+    detections = sv.Detections(
+        xyxy=np.array(boxes),
+        confidence=np.array(confidences),
+        class_id=np.array(class_ids)
+    )
+    labels = [item["class"] for item in result["predictions"]]
+    label_annotator = sv.LabelAnnotator()
+    box_annotator = sv.BoxAnnotator()
+    image = cv2.imread(filepath)
+    annotated_image = box_annotator.annotate(scene=image, detections=detections)
+    annotated_image = label_annotator.annotate(scene=annotated_image, detections=detections, labels=labels)
+    
+    annotated_image_path = os.path.join(app.config['UPLOAD_FOLDER'], "annotated_" + os.path.basename(filepath))
+    cv2.imwrite(annotated_image_path, annotated_image)
+    
+    return labels, "uploads/annotated_" + os.path.basename(filepath)
 
 @app.route('/friends', methods=["GET", "POST"])
 @login_required
@@ -574,6 +595,7 @@ def decline_friend(friend_id):
         flash('Friend request declined.', 'success')
     return redirect(url_for('friends'))
 
+
     return redirect(url_for('friends'))
 
 @app.route('/save_shared_location/<int:location_id>', methods=['POST'])
@@ -613,8 +635,6 @@ def remove_shared_location(location_id):
         flash('Location removed from shared locations.', 'success')
     return redirect(url_for('friends'))
 
-
-
 # reviews code
 # TODO: make reviews dynamic for locations
 @app.route('/reviews')
@@ -632,4 +652,5 @@ def submit_review():
     return redirect(url_for('review'))
 
 if __name__ == "__main__":
-    app.run(debug=True,host="0.0.0.0")
+    app.run(debug=True, host='0.0.0.0')
+
