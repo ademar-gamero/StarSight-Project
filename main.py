@@ -66,7 +66,7 @@ class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=False, nullable=True)
     rating = db.Column(db.Numeric(4, 7), unique=True, nullable=True)
-    reviewer_count = db.Column(db.Integer, unique=False, nullable=True)
+    reviewer_count = db.Column(db.Integer, unique=False, default=0)
     address = db.Column(db.String(256),unique=False,nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
     longitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
