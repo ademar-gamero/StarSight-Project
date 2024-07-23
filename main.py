@@ -24,13 +24,6 @@ from constellation import ConstellationCalculator
 import secrets
 import os
 
-# print("KEYS:")
-# print(os.environ['API_KEY'])
-# print(os.environ['GOOGLE_KEY'])
-# print(os.environ['NINJA_KEY'])
-# print(os.environ['GOOGLE_ID'])
-
-
 nest_asyncio.apply()
 
 app = Flask(__name__)
