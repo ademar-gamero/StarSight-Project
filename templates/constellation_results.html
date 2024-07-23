@@ -14,6 +14,7 @@
             align-items: center;
             flex-direction: column;
             margin: 0;
+            font-family: 'Times New Roman', Times, serif;
         }
         .navbar {
             width: 100%;
@@ -23,21 +24,23 @@
         }
         .container {
             background-color: rgba(211, 211, 211, 0.8);
-            padding: 50px;
+            padding: 20px;
             border-radius: 10px;
             text-align: center;
             width: 50%;
-            margin-top: 100px;
         }
         .result-image {
-            max-width: 100%;
-            height: 400px;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin: 20px;
+            max-width: 50%;
+            height: 50%;
+            margin: 5px;
+            margin-top: 50px;
         }
         h1 {
-            color: #333;
+            color: #202F5A;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: x-large;
+            font-weight: bold;
         }
         ul {
             list-style-type: none;
@@ -45,10 +48,14 @@
         }
         li {
             color: #555;
-            /*margin: 10px 0;*/
+            text-align: left;
+            text-transform: capitalize;
+            font-size: medium;
         }
         .btn-primary {
             margin-top: 20px;
+            background-color: #202F5A;
+            color: white;
         }
     </style>
 </head>
@@ -80,10 +87,10 @@
             </div>
         </div>
     </nav>
-    <div class="container">
-        {% if annotated_image %}
+    {% if annotated_image %}
             <img src="{{ url_for('static', filename=annotated_image) }}" alt="Annotated Image" class="result-image">
-        {% endif %}
+    {% endif %}
+    <div class="container">
         <h1>Your Constellations:</h1>
         <ul>
             {% for constellation in constellations %}
@@ -91,6 +98,7 @@
             {% endfor %}
         </ul>
         <a href="{{ url_for('upload_photo') }}" class="btn btn-primary">Upload Another</a>
+        <a href="{{ url_for('find_stars') }}" class="btn btn-primary">Learn More</a>
     </div>
 </body>
 </html>
