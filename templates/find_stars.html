@@ -43,15 +43,15 @@
       <table>
         <tr>
           <th> Marker </th>
-          <th> Latitude </th>
-          <th> Longitude </th>
+          <th> Ranking (0-5 scale) </th>
+          <th> Address </th>
           <th> Select Location </th>
         </tr>
         {% for marker in markers%}
         <tr>
           <td>{{marker["label"]}}</td>
-          <td>{{marker["lat"]}}</td>
-          <td>{{marker["lng"]}}</td>
+          <td>{{marker["ranking"]}}</td>
+          <td>{{marker["address"]}}</td>
           <td> <input type="radio" name="selection" value='{{ marker|tojson }}' ></td>
         </tr>
         {% endfor %}

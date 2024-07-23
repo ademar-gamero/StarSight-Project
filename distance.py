@@ -110,13 +110,31 @@ class CityAPI():
         elif elevation >= 5000:
             score_obj.increase_score(2)
 
+    def get_state_and_county(self,location_info):
+        state = None
+        county = None
+        if location_info['status'] == 'OK':
+            for component in location_info['results'][0]['address_components']:
+                if 'adminstrative_area_level_1' in component['types']:
+                    state = component['long_name']
+                if 'adminstrative_area_level_2' in component['types']:
+                    state = component['long_name']
+        return state, county
+
     async def retrieve_address(self):
         location_info = None
         google_key = os.environ.get('GOOGLE_KEY')
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://maps.googleapis.com/maps/api/geocode/json?latlng={self.location_latitude},{self.location_longitude}&key={google_key}") as response:
                 location_info = await response.json()
-        return location_info
+        address = location_info['results'][0].get('formatted_address','')
+        if '+' in address:
+            part = address.split('+')
+            if len(part) == 2 and len(part[1]) > 0:
+                state, county = self.get_state_and_county(location_info)
+                if state and county:
+                    address = f"{county},{state}"
+        return address
 
 class curr_user():
     def __init__(self):

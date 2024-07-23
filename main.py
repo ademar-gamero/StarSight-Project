@@ -204,9 +204,11 @@ def learn_more():
 
 #helper method to process a location
 async def process_loc(loc,single):
+
     loc_score = score1()
     city = CityAPI(loc["lat"],loc["lng"])
     local = await city.get_nearby_cities()
+    address = await city.retrieve_address()
     await city.city_calculate(loc_score,local)
     await city.calculate_elevation(loc_score)
     weather_response = await WeatherAPI.get_weather_response(loc["lat"],loc["lng"])
@@ -218,12 +220,13 @@ async def process_loc(loc,single):
     weather_deduction = await WeatherAPI.get_weather_score(weather_response)
     loc_score.lower_score(weather_deduction)
     loc_score.moon_light_pollution -= moon_deduction
+
     if loc_score.score >= 3 or single == True: #dont forget to change back
        weather_rep = await WeatherAPI.return_weather_report(weather_response)
        lunar_phase = await WeatherAPI.return_moon_phase(weather_response)
        optimal_loc = ({'lat':loc['lat'], 'lng':loc['lng'], 'label':loc['label'], 'ranking':loc_score.return_current_score_str(),'ranking_score':loc_score.score,
                             'light_ranking':loc_score.return_current_light_pollution_str(), 'weather_report':weather_rep,
-                            'lunar_phase':lunar_phase, 'lunar_impact':loc_score.moon_light_pollution_card[loc_score.moon_light_pollution]})
+                       'lunar_phase':lunar_phase, 'lunar_impact':loc_score.moon_light_pollution_card[loc_score.moon_light_pollution], 'address':address})
        return optimal_loc
     return None
 
@@ -238,6 +241,7 @@ def find_stars():
         zoom_coords = {"lat":cur_usr.coords[0],"lng":cur_usr.coords[1]}
     else:
         zoom_coords = {"lat":37.263056,"lng":-115.79302}
+
     form = LocationForm()
     api_key = os.environ.get('GOOGLE_KEY') 
     map_id = os.environ.get('GOOGLE_ID')
@@ -256,6 +260,7 @@ def find_stars():
            weather_report = v_processed["weather_report"]
            session["weather_report"] = weather_report
            session["location"] = point
+           session["address"] = v_processed["address"]
            l_phase = v_processed["lunar_phase"]
            l_score = v_processed["lunar_impact"]
            return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase,lunar_impact=l_score))
@@ -320,22 +325,16 @@ def find_stars():
 @app.route("/results/<rating>/<light_rating>/<lunar_phase>/<lunar_impact>",methods=['GET','POST'])
 def results(rating,light_rating,lunar_phase,lunar_impact):
     weather_report = session.get("weather_report", [])
-    point = session.get("location")
-    address = None
-    if point != None:
-        print("running")
+    point = session.get("location", None)
+    address = session["address"]
+    if address == None and point != None:
         calc = CityAPI(point["lat"],point["lng"])
         loc_address = asyncio.run(calc.retrieve_address())
-        address = loc_address['results'][0].get('formatted_address')
+        address = loc_address['results'][0].get('formatted_address') 
     if request.method == "POST":
         lat = request.form.get("hidden_lat")
         lng = request.form.get("hidden_lng")
-        print("coords")
-        print(lat)
-        print(lng)
         user = load_user_from_db(current_user.id)
-        print("user")
-        print(user)
         locations = []
         if user:
             locations = user.saved_locations
@@ -343,7 +342,6 @@ def results(rating,light_rating,lunar_phase,lunar_impact):
             loc_lat = loc.latitude
             loc_lng = loc.longitude
             if str(loc_lat) == lat and str(loc_lng) == lng:
-                print("found error")
                 flash("This location is already saved in the database, error")
                 return render_template("results.html",rating=rating,light_rating=light_rating,weather_report=weather_report,lunar_phase=lunar_phase,
                            point=point,lunar_impact=lunar_impact)
@@ -351,7 +349,6 @@ def results(rating,light_rating,lunar_phase,lunar_impact):
         if lat and lng and name:
             lat = float(lat)
             lng = float(lng)
-            print("found path")
             new_loc = Location(name=name,latitude=lat,longitude=lng,address=address,user=current_user)
             db.session.add(new_loc)
             db.session.commit()
