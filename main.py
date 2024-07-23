@@ -26,6 +26,7 @@ from roboflow import Roboflow
 import supervision as sv
 import cv2
 import numpy as np
+from sqlalchemy import func
 
 
 nest_asyncio.apply()
@@ -531,6 +532,21 @@ def detect_constellations(filepath):
     cv2.imwrite(annotated_image_path, annotated_image)
     
     return labels, "uploads/annotated_" + os.path.basename(filepath)
+
+@app.route("/find_constellations/learn_more")
+def find_constellations_lm():
+    display_constellations = []
+    constellations = request.args.getlist('constellations')
+    for constellation in constellations:
+        db_constellation = Constellation.query.filter(func.lower(Constellation.name).ilike(func.lower(constellation))).first()
+        if db_constellation:
+            display_constellations.append({
+                "name": db_constellation.name,
+                "img": db_constellation.img,
+                "description": db_constellation.description
+            })
+    return render_template("find_constellations.html", constellations=display_constellations)
+
 
 @app.route('/friends', methods=["GET", "POST"])
 @login_required
