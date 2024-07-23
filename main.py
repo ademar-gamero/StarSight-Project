@@ -13,31 +13,30 @@ from sqlalchemy import Text
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.utils import secure_filename
 from inference_sdk import InferenceHTTPClient
-
-
 from forms import LocationForm, RegistrationForm, AddFriendForm, UploadPhotoForm
 
-from datetime import datetime
 from distance import curr_user, score1, CityAPI
 from weather_api import WeatherAPI
 from constellation import ConstellationCalculator, populate_constellations_table
 import secrets
 import os
 
+from datetime import datetime
+from roboflow import Roboflow
+import supervision as sv
+import cv2
+import numpy as np
+
+
 nest_asyncio.apply()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///star.db'
 
-UPLOAD_FOLDER = 'uploads'
+STATIC_FOLDER = 'static'
+UPLOAD_FOLDER = os.path.join(STATIC_FOLDER, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Initialize Roboflow client
-CLIENT = InferenceHTTPClient(
-    api_url="https://detect.roboflow.com",
-    api_key=os.getenv("ROBOFLOW_API_KEY")
-)
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
@@ -107,7 +106,6 @@ class Constellation(db.Model):
 
     def __repr__(self):
         return f"Constellation({self.name})"
-
 
 class Reviews(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -466,8 +464,9 @@ def upload_photo():
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
-            constellations = detect_constellations(filepath)
+            constellations, annotated_image_path = detect_constellations(filepath)
             session['constellations'] = constellations
+            session['annotated_image'] = annotated_image_path
             return redirect(url_for('constellation_results'))
     return render_template('upload_photo.html')
 
@@ -475,13 +474,39 @@ def upload_photo():
 @login_required
 def constellation_results():
     constellations = session.get('constellations', [])
-    return render_template('constellation_results.html', constellations=constellations)
+    annotated_image = session.get('annotated_image', '')
+    return render_template('constellation_results.html', constellations=constellations, annotated_image=annotated_image)
 
 def detect_constellations(filepath):
-    result = CLIENT.infer(filepath, model_id="constellation-dsphi/1")
-    detections = result['predictions']
-    constellations = [det['class'] for det in detections]
-    return constellations
+    rf = Roboflow(api_key="BmaSz5YCzhmjapwU7201")
+    project = rf.workspace().project("constellation-dsphi")
+    model = project.version(1).model
+    result = model.predict(filepath, confidence=40, overlap=30).json()
+
+    boxes = []
+    confidences = []
+    class_ids = []
+    for prediction in result['predictions']:
+        x, y, w, h = prediction['x'], prediction['y'], prediction['width'], prediction['height']
+        boxes.append([x - w/2, y - h/2, x + w/2, y + h/2])
+        confidences.append(prediction['confidence'])
+        class_ids.append(prediction['class_id'])
+    detections = sv.Detections(
+        xyxy=np.array(boxes),
+        confidence=np.array(confidences),
+        class_id=np.array(class_ids)
+    )
+    labels = [item["class"] for item in result["predictions"]]
+    label_annotator = sv.LabelAnnotator()
+    box_annotator = sv.BoxAnnotator()
+    image = cv2.imread(filepath)
+    annotated_image = box_annotator.annotate(scene=image, detections=detections)
+    annotated_image = label_annotator.annotate(scene=annotated_image, detections=detections, labels=labels)
+    
+    annotated_image_path = os.path.join(app.config['UPLOAD_FOLDER'], "annotated_" + os.path.basename(filepath))
+    cv2.imwrite(annotated_image_path, annotated_image)
+    
+    return labels, "uploads/annotated_" + os.path.basename(filepath)
 
 @app.route('/friends', methods=["GET", "POST"])
 @login_required
@@ -533,8 +558,6 @@ def decline_friend(friend_id):
         flash('Friend request declined.', 'success')
     return redirect(url_for('friends'))
 
-    return redirect(url_for('friends'))
-
 # reviews code
 # TODO: make reviews dynamic for locations
 @app.route('/reviews')
@@ -552,4 +575,5 @@ def submit_review():
     return redirect(url_for('review'))
 
 if __name__ == "__main__":
-    app.run(debug=True,host="0.0.0.0")
+    app.run(debug=True, host='0.0.0.0')
+
