@@ -80,12 +80,13 @@ class CityAPI():
                         print(score_obj.score)
                         name = element[1]
                         dict2 = {}
-                        api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
-                        async with session.get(api_url, headers={'X-Api-Key':os.environ.get('NINJA_KEY')}) as response:
-                            dict2 = await response.json()
-                        if len(dict2) == 0:
-                            continue
-                        pop = dict2[0]["population"]
+                        #api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
+                        #async with session.get(api_url, headers={'X-Api-Key':os.environ.get('NINJA_KEY')}) as response:
+                            #dict2 = await response.json()
+                        #if len(dict2) == 0:
+                            #continue
+                        #pop = dict2[0]["population"]
+                        pop = 20000
                         if 50000 <= pop <= 100000:
                             score_obj.lower_score(1)
                             score_obj.light_pollution -= 1

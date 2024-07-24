@@ -11,8 +11,9 @@
     </head>
     <body>
         <h1>Location Reviews</h1>
+        <h2> Rating: {{loc_rating}}★</h2>
         <!-- Form to submit new review-->
-        <form method="POST" action="{{ url_for('submit_review')}}">
+    <form method="POST" action="{{ url_for('submit_review',address=address, latitude=lat, longitude=lng)}}">
             <label for="rating">Rating (1 - 5):</label>
             <input type="range" id="rating" name="rating" min="1" max="5" value="5" oninput="this.nextElementSibling.value=this.value" required>
             <output>5</output>
@@ -26,20 +27,21 @@
     <hr>
 
     <!-- Display existing reviews -->
-     {% if reviews %}
+     {% if reviews != [] %}
         {% for review in reviews %}
         <div class="review">
             <div>
                 Rating:
-                {% for _ in range(review.rating) %}
+                {% for _ in range(review["rating"]) %}
                 <span class="stars">★</span>
                 {% endfor %}
-                {% for _ in range(5 - review.rating) %}
+                {% for _ in range(5 - review["rating"]) %}
                 <span class="stars">☆</span>
                 {% endfor %}
             </div>
-            <div>{{ review.comment }}</div>
-            <div>{{ review.date.date() }}</div>
+            <div>{{ review["user"]}}
+            <div>{{ review["comment"] }}</div>
+            <div>{{ review["date"] }}</div>
         </div>
         {% endfor %}
     {% else %}

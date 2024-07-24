@@ -75,9 +75,7 @@
           <td>{{marker["address"]}}</td>
           <td> <input type="radio" name="selection" value='{{ marker|tojson }}' ></td>
           <td>
-            <a href="{{ url_for('reviews', address=marker['address'], longitude=marker['lng'], latitude=marker['lat']) }}">
-              <button>Reviews</button>
-            </a>
+            <a href="{{ url_for('reviews', address=marker['address'], longitude=marker['lng'], latitude=marker['lat']) }}">Reviews</a>
             <script>
               console.log("{{ marker }}");
           </script>
@@ -162,15 +160,14 @@
           let lat = marker.latitude;
           let lng = marker.longitude;
           let address = marker.address;  
-          let rating = marker.rating;
+          let rating = marker.rating/marker.reviewer_count;
           console.log(lat)
           console.log(lng)
           return `
-            <div>
             <h3>${address}</h3>
-            <h3>${rating}☆</h3>
+            <h3>${rating}★</h3>
               <p>
-                <a href ="{{ url_for('main_menu')}}">View Reviews</a> |
+                <a href ="/reviews/${address}/${lat}/${lng}">View Reviews</a> |
                 <a href ="/${lat}/${lng}/results">View Results</a>
               </p>
           `;

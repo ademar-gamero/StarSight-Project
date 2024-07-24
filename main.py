@@ -28,7 +28,7 @@ import supervision as sv
 import cv2
 import numpy as np
 from sqlalchemy import func
-
+from decimal import Decimal
 
 
 nest_asyncio.apply()
@@ -132,22 +132,26 @@ with app.app_context():
 
     address = "testing"
     if Location.query.filter_by(latitude=43.982465, longitude=-89.078786,reviewer_count=5).first() == None:
-        test_pop_1 = Location(name="test_pop_1",reviewer_count=5,rating=4.2,latitude=43.982465,longitude=-89.078786,address=address)
+        rating = 4.2 * 5
+        test_pop_1 = Location(name="test_pop_1",reviewer_count=5,rating=rating,latitude=43.982465,longitude=-89.078786,address=address)
         db.session.add(test_pop_1)
         db.session.commit()
     if Location.query.filter_by(latitude=38.72708333, longitude=-106.47411111,reviewer_count=5).first() == None:
+        rating = 4.5 * 5
         address = "Gunnison National Forrest,Tincup, Colorado"
-        test_pop_2 = Location(name="test_pop_2",reviewer_count=5,rating=4.5,latitude=38.72708333,longitude=-106.47411111,address=address)
+        test_pop_2 = Location(name="test_pop_2",reviewer_count=5,rating=rating,latitude=38.72708333,longitude=-106.47411111,address=address)
         db.session.add(test_pop_2)
         db.session.commit()
     if Location.query.filter_by(latitude=46.157574, longitude=-93.166120,reviewer_count=5).first() == None:
+        rating = 4.1 * 5
         address = "Snake Creek River,Isle, Minnesota"
-        test_pop_3 = Location(name="test_pop_3",reviewer_count=5,rating=4.1,latitude=46.157574,longitude=-93.166120,address=address)
+        test_pop_3 = Location(name="test_pop_3",reviewer_count=5,rating=rating,latitude=46.157574,longitude=-93.166120,address=address)
         db.session.add(test_pop_3)
         db.session.commit()
     if Location.query.filter_by(latitude=45.313161, longitude=-89.315375,reviewer_count=5).first() == None:
+        rating = 4.1 * 5
         address = "Summit, Wisconsin 54435"
-        test_pop_3 = Location(name="test_pop_4",reviewer_count=5,rating=4.1,latitude=45.313161,longitude=-89.315375,address=address)
+        test_pop_3 = Location(name="test_pop_4",reviewer_count=5,rating=rating,latitude=45.313161,longitude=-89.315375,address=address)
         db.session.add(test_pop_3)
         db.session.commit()
 
@@ -671,51 +675,75 @@ def remove_shared_location(location_id):
 
 # reviews code
 # TODO: make reviews dynamic for locations
-@app.route('/reviews/<address>/<longitude>/<latitude>')
-def reviews(address, longitude, latitude):
+@app.route('/reviews/<address>/<latitude>/<longitude>')
+def reviews(address, latitude, longitude):
+    latitude = float(latitude)
+    longitude = float(longitude)
+    reviews = None
+    loc_rating = None
     location = Location.query.filter(
         and_(
-            Location.address == address,
             Location.longitude == longitude,
-            Location.latitude == latitude
+            Location.latitude == latitude,
+            Location.reviewer_count > 0
         )
     ).first()
-
-    if location.reviewer_count == 0:
-        flash("Location not found", "error")
-        return redirect(url_for("find_stars"))
-    
-    reviews = Reviews.query.filter_by(location_id=location.id).order_by(Reviews.date.desc()).all()
-    return render_template('reviews.html', location=location, reviews=reviews)
+    user_reviews = []
+    if location:
+        reviews = Reviews.query.filter_by(location_id=location.id).order_by(Reviews.date.desc()).all()
+        for review in reviews:
+            user = load_user_from_db(review.user_id)
+            user_reviews.append({"user":user.username,"date":review.date.date(),"comment":review.comment,"rating":review.rating})
+        loc_rating = location.rating/location.reviewer_count 
+        loc_rating = round(loc_rating,2)
+        
+    return render_template('reviews.html', address=address, lat=latitude, lng=longitude, location=location, reviews=user_reviews, loc_rating=loc_rating)
 
 
 @app.route('/submit_review/<address>/<longitude>/<latitude>', methods=['POST'])
 def submit_review(address, longitude, latitude):
+    user = load_user_from_db(current_user.id)
+
     location = Location.query.filter(
         and_(
-            Location.address == address,
             Location.longitude == longitude,
-            Location.latitude == latitude
+            Location.latitude == latitude,
+            Location.reviewer_count > 0
         )
     ).first()
-    if not location:
-        location.reviewer_count += 1
-        flash("Location not found", "error")
-        return redirect(url_for("find_stars"))
     
+
     rating = int(request.form['rating'])
     comment = request.form['comment']
-    new_review = Reviews(
-        rating=rating, 
-        comment=comment, 
-        location_id=location.id,
-        user_id = curr_user.id
-    )
-    location.reviewer_count += 1
-    db.session.add(new_review)
-    db.session.commit()
-    flash("Your review has been submitted successfully!", "success")
-    return redirect(url_for('review', address=address, longitude=longitude, latitude=latitude))
+    new_review = None
+    if user:
+        if not location:
+            new_reviewed_location = Location(address=address,latitude=latitude,longitude=longitude)
+            new_reviewed_location.reviewer_count += 1
+            new_review = Reviews(
+                rating=rating, 
+                comment=comment, 
+                location_id=new_reviewed_location.id,
+                user_id = user.id
+            )
+            new_reviewed_location.rating = rating
+        else:
+            location.reviewer_count += 1
+            new_review = Reviews(
+                rating=rating, 
+                comment=comment, 
+                location_id=location.id,
+                user_id = user.id
+            )
+            location.rating += rating
+    else:
+        flash("User is not currently signed in or User does not exist in the system")
+        redirect(url_for('login'))
+    if new_review: 
+        db.session.add(new_review)
+        db.session.commit()
+        flash("Your review has been submitted successfully!", "success")
+    return redirect(url_for('reviews', address=address, longitude=longitude, latitude=latitude))
 
 
 if __name__ == "__main__":
