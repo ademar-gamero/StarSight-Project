@@ -55,8 +55,6 @@ class WeatherAPI:
     # called from main
     @staticmethod
     async def print_moon_phase(response):
-    @staticmethod
-    async def print_moon_phase(response):
         moon_phase = response['forecast']['forecastday'][0]['astro']['moon_phase'] 
         print(moon_phase)
 

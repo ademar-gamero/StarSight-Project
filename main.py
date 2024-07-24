@@ -65,7 +65,7 @@ class User(db.Model, UserMixin):
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=False, nullable=True)
-    rating = db.Column(db.Numeric(4, 7), unique=True, nullable=True)
+    rating = db.Column(db.Numeric(4, 7), unique=False, nullable=True)
     reviewer_count = db.Column(db.Integer, unique=False, nullable=True)
     address = db.Column(db.String(256),unique=False,nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
@@ -73,6 +73,7 @@ class Location(db.Model):
     elevation = db.Column(db.Numeric(6, 1), unique=False, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     shared_with = db.Column(db.Text, nullable=True)
+
     def __repr__(self):
         return f"Location({self.id},{self.latitude},{self.longitude})"
 
@@ -86,7 +87,7 @@ class Location(db.Model):
                 'latitude': float(self.latitude),
                 'longitude': float(self.longitude),
                 'elevation': float(self.elevation) if self.elevation else None,
-                'shared_with': self.shared_with  # Include shared_with in the dictionary
+                'shared_with': self.shared_with if self.shared_with else None  # Include shared_with in the dictionary
                 }
     
     
@@ -130,8 +131,23 @@ with app.app_context():
 
     address = "testing"
     if Location.query.filter_by(latitude=43.982465, longitude=-89.078786,reviewer_count=5).first() == None:
-        test_1 = Location(name="test_db_5",reviewer_count=5,latitude=43.982465,longitude=-89.078786,address=address)
-        db.session.add(test_1)
+        test_pop_1 = Location(name="test_pop_1",reviewer_count=5,rating=4.2,latitude=43.982465,longitude=-89.078786,address=address)
+        db.session.add(test_pop_1)
+        db.session.commit()
+    if Location.query.filter_by(latitude=38.72708333, longitude=-106.47411111,reviewer_count=5).first() == None:
+        address = "Gunnison National Forrest,Tincup, Colorado"
+        test_pop_2 = Location(name="test_pop_2",reviewer_count=5,rating=4.5,latitude=38.590448,longitude=-103.324181,address=address)
+        db.session.add(test_pop_2)
+        db.session.commit()
+    if Location.query.filter_by(latitude=46.157574, longitude=-93.166120,reviewer_count=5).first() == None:
+        address = "Snake Creek River,Isle, Minnesota"
+        test_pop_3 = Location(name="test_pop_3",reviewer_count=5,rating=4.1,latitude=38.590448,longitude=-103.324181,address=address)
+        db.session.add(test_pop_3)
+        db.session.commit()
+    if Location.query.filter_by(latitude=45.313161, longitude=-89.315375,reviewer_count=5).first() == None:
+        address = "Summit, Wisconsin 54435"
+        test_pop_3 = Location(name="test_pop_4",reviewer_count=5,rating=4.1,latitude=38.590448,longitude=-103.324181,address=address)
+        db.session.add(test_pop_3)
         db.session.commit()
 
 def clear_session():
