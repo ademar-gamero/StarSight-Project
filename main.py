@@ -522,7 +522,7 @@ def constellation_results():
     return render_template('constellation_results.html', constellations=constellations, annotated_image=annotated_image)
 
 def detect_constellations(filepath):
-    rf = Roboflow(api_key="BmaSz5YCzhmjapwU7201")
+    rf = Roboflow(api_key=os.getenv("ROBOFLOW_API_KEY"))
     project = rf.workspace().project("constellation-dsphi")
     model = project.version(1).model
     result = model.predict(filepath, confidence=40, overlap=30).json()
@@ -719,5 +719,5 @@ def submit_review(address, longitude, latitude):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0")
+    app.run(debug=True)
 
