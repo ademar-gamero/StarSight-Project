@@ -76,8 +76,8 @@ class CityAPI():
             if len(city_list[0]) > 0:
                 async with aiohttp.ClientSession() as session:
                     for element in city_list:
-                        print("current score")
-                        print(score_obj.score)
+                        #print("current score")
+                        #print(score_obj.score)
                         name = element[1]
                         dict2 = {}
                         #api_url = f'https://api.api-ninjas.com/v1/city?name={name}'
@@ -104,7 +104,7 @@ class CityAPI():
             async with session.get(f"https://api.open-meteo.com/v1/elevation?latitude={self.location_latitude}&longitude={self.location_longitude}") as response:
                 elev_dict = await response.json()
         elevation = elev_dict["elevation"][0]
-        print("elevation:")
+        #print("elevation:")
         if 5000 > elevation >= 3000:
             score_obj.increase_score(1)
         elif elevation >= 5000:
@@ -128,11 +128,22 @@ class CityAPI():
             async with session.get(f"https://maps.googleapis.com/maps/api/geocode/json?latlng={self.location_latitude},{self.location_longitude}&key={google_key}") as response:
                 location_info = await response.json()
         address = location_info['results'][0].get('formatted_address','')
-        if '+' in address:
-            part = address.split('+')
-            if len(part) == 2 and len(part[1]) > 0:
-                state, county = self.get_state_and_county(location_info)
-                if state and county:
+        counter = 0
+        flip = False
+        for char in address:
+            if flip == True:
+                counter += 1
+            if char == '+':
+                flip = True
+        if counter <= 2:
+            state, county = self.get_state_and_county(location_info)
+            print("info")
+            print(location_info)
+            print("")
+            if state or county:
+                if state and not county:
+                    address = f"{state}"
+                else:
                     address = f"{county},{state}"
         return address
 

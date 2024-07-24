@@ -676,6 +676,7 @@ def remove_shared_location(location_id):
 # reviews code
 # TODO: make reviews dynamic for locations
 @app.route('/reviews/<address>/<latitude>/<longitude>')
+@login_required
 def reviews(address, latitude, longitude):
     latitude = float(latitude)
     longitude = float(longitude)
@@ -701,6 +702,7 @@ def reviews(address, latitude, longitude):
 
 
 @app.route('/submit_review/<address>/<longitude>/<latitude>', methods=['POST'])
+@login_required
 def submit_review(address, longitude, latitude):
     user = load_user_from_db(current_user.id)
 
