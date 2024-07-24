@@ -219,8 +219,16 @@ class curr_user():
                 nearby_locs.append(west) 
     '''      
     def calculate_nearby_locs(self,nearby_locs,origin_loc,search_radius=8.04672):
-        lat = float(origin_loc[0])
-        lon = float(origin_loc[1])
+        if not origin_loc or len(origin_loc) < 2 or origin_loc[0] is None or origin_loc[1] is None:
+            print("Invalid origin location provided")
+            return nearby_locs  # Return the empty list
+
+        try:
+            lat = float(origin_loc[0])
+            lon = float(origin_loc[1])
+        except (ValueError, TypeError):
+            print(f"Invalid latitude or longitude: {origin_loc}")
+            return nearby_locs
         origin_loc = (lat,lon)
         dist_bw_points = self.guide[search_radius] 
         points_to_generate = 5
