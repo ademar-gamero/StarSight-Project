@@ -106,43 +106,41 @@
               pixelOffset: new google.maps.Size(-12,0)
             });
 
-            let markerInfo;
-            let popularMarker;
 
             // Add popular markers from server
             {% for marker in popular_markers %}
-              (function(markerInfo) {
+              (function() {
+                let markerInfo = {{ marker | tojson }};
 
-              popularMarker = new AdvancedMarkerElement({
-                map: map,
-                position: {lat: {{marker["latitude"]}}, lng: {{marker["longitude"]}}},
-                content: createPopularMarkerContent()
-              });           
+                console.log("Processing marker", markerInfo);
+                let popularMarker = new AdvancedMarkerElement({
+                  map: map,
+                  position: {lat: {{marker["latitude"]}}, lng: {{marker["longitude"]}}},
+                  content: createPopularMarkerContent()
+                });           
 
-              console.log(markerInfo)
-
-              popularMarker.addListener('click',function() {
-                linkWindow.setContent(createLinkWindowContent(markerInfo));
-                linkWindow.open(map, popularMarker);  
-                map.setCenter(popularMarker.position);
+                popularMarker.addListener('click',function() {
+                  linkWindow.setContent(createLinkWindowContent(markerInfo));
+                  linkWindow.open(map, popularMarker);  
 
               });  
 
-          })({{ marker | tojson }});
+          })();
           {% endfor %}
   }
         
         function createLinkWindowContent(marker){
-          console.log(marker)
+          console.log("link window", marker);
           let lat = marker.latitude;
           let lng = marker.longitude;
           let address = marker.address;  
+          let rating = marker.rating;
           console.log(lat)
           console.log(lng)
           return `
             <div>
             <h3>${address}</h3>
-            <h3>Add rating</h3>
+            <h3>${rating}☆</h3>
               <p>
                 <a href ="{{ url_for('main_menu')}}">View Reviews</a> |
                 <a href ="/${lat}/${lng}/results">View Results</a>

@@ -87,7 +87,7 @@ class Location(db.Model):
                 'latitude': float(self.latitude),
                 'longitude': float(self.longitude),
                 'elevation': float(self.elevation) if self.elevation else None,
-                'shared_with': self.shared_with if self.shared_with else None  # Include shared_with in the dictionary
+                'shared_with': self.shared_with if self.shared_with else None,  # Include shared_with in the dictionary
                 }
     
     
@@ -136,17 +136,17 @@ with app.app_context():
         db.session.commit()
     if Location.query.filter_by(latitude=38.72708333, longitude=-106.47411111,reviewer_count=5).first() == None:
         address = "Gunnison National Forrest,Tincup, Colorado"
-        test_pop_2 = Location(name="test_pop_2",reviewer_count=5,rating=4.5,latitude=38.590448,longitude=-103.324181,address=address)
+        test_pop_2 = Location(name="test_pop_2",reviewer_count=5,rating=4.5,latitude=38.72708333,longitude=-106.47411111,address=address)
         db.session.add(test_pop_2)
         db.session.commit()
     if Location.query.filter_by(latitude=46.157574, longitude=-93.166120,reviewer_count=5).first() == None:
         address = "Snake Creek River,Isle, Minnesota"
-        test_pop_3 = Location(name="test_pop_3",reviewer_count=5,rating=4.1,latitude=38.590448,longitude=-103.324181,address=address)
+        test_pop_3 = Location(name="test_pop_3",reviewer_count=5,rating=4.1,latitude=46.157574,longitude=-93.166120,address=address)
         db.session.add(test_pop_3)
         db.session.commit()
     if Location.query.filter_by(latitude=45.313161, longitude=-89.315375,reviewer_count=5).first() == None:
         address = "Summit, Wisconsin 54435"
-        test_pop_3 = Location(name="test_pop_4",reviewer_count=5,rating=4.1,latitude=38.590448,longitude=-103.324181,address=address)
+        test_pop_3 = Location(name="test_pop_4",reviewer_count=5,rating=4.1,latitude=45.313161,longitude=-89.315375,address=address)
         db.session.add(test_pop_3)
         db.session.commit()
 
@@ -277,10 +277,10 @@ def find_stars():
            weather_report = v_processed["weather_report"]
            session["weather_report"] = weather_report
            session["location"] = point
-           session["address"] = v_processed["address"]
+           address = v_processed["address"]
            l_phase = v_processed["lunar_phase"]
            l_score = v_processed["lunar_impact"]
-           return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase,lunar_impact=l_score))
+           return redirect(url_for("results",rating=ovrl_ranking,light_rating=light_ranking, lunar_phase=l_phase,lunar_impact=l_score,address=address))
 
        session.pop("optimal_locs",[])
 
@@ -339,11 +339,11 @@ def find_stars():
 
         return render_template("find_stars.html",form=form, map_api_key = api_key, map_id=map_id ,usr_coords = zoom_coords,markers=optimal_locs, popular_markers=popular_markers)
 
-@app.route("/results/<rating>/<light_rating>/<lunar_phase>/<lunar_impact>",methods=['GET','POST'])
-def results(rating,light_rating,lunar_phase,lunar_impact):
+@app.route("/results/<rating>/<light_rating>/<lunar_phase>/<lunar_impact>/<address>",methods=['GET','POST'])
+def results(rating,light_rating,lunar_phase,lunar_impact,address):
     weather_report = session.get("weather_report", [])
     point = session.get("location", None)
-    address = session["address"]
+    address = address
     if address == None and point != None:
         calc = CityAPI(point["lat"],point["lng"])
         loc_address = asyncio.run(calc.retrieve_address())
@@ -463,6 +463,7 @@ def calculate_results(latitude, longitude):
     light_ranking = None
     lunar_phase = None
     lunar_impact = None
+    address = None
     result = asyncio.run(process_loc(loc=loc,single=True))
     print(result)
     if result is not None:
@@ -470,6 +471,7 @@ def calculate_results(latitude, longitude):
         light_ranking = result["light_ranking"]
         lunar_phase = result["lunar_phase"]
         lunar_impact = result["lunar_impact"]
+        address = result["address"]
         session["weather_report"] = result["weather_report"]
     '''
     loc_score = score1()
@@ -485,7 +487,7 @@ def calculate_results(latitude, longitude):
     ranking = loc_score.return_current_score_str()
     light_ranking = loc_score.return_current_light_pollution_str()
     '''
-    return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase, lunar_impact=lunar_impact))
+    return redirect(url_for("results",rating=ranking,light_rating=light_ranking, lunar_phase=lunar_phase, lunar_impact=lunar_impact,address=address))
     #basically sends a POST request for database
     #if successful we send the data into the html file
 
