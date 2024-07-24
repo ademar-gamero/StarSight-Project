@@ -132,6 +132,7 @@ with app.app_context():
 
     address = "testing"
     if Location.query.filter_by(latitude=43.982465, longitude=-89.078786,reviewer_count=5).first() == None:
+        address = "Seneca, WI"
         rating = 4.2 * 5
         test_pop_1 = Location(name="test_pop_1",reviewer_count=5,rating=rating,latitude=43.982465,longitude=-89.078786,address=address)
         db.session.add(test_pop_1)
@@ -435,7 +436,7 @@ def remove_saved_location(location_id):
         if request.form["answer"] == "yes":
             db.session.delete(location)
             db.session.commit()
-            flash("Location successfully removed")
+            flash("Location successfully removed",'success')
         else:
             flash("Location was not removed")
         return redirect(url_for('saved_locations_page'))
