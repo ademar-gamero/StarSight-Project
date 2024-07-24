@@ -46,7 +46,7 @@
 }
 
 .tabbed-navbar-background .nav-link {
-    color: #4B0082; /* Indigo text color */
+    color: #4B0082;
 }
 
 .tabbed-navbar-background .nav-link.active,
@@ -61,10 +61,18 @@
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
 }
 
-/* Set specific width for the add friends search box */
+/* Set specific width for the add friends search box and apply margin-left */
 #add-friend .form-control {
     width: 70%; /* Adjust this value to set the desired width */
     margin-left: 25px;
+    margin-bottom: 10px;
+}
+
+/* Apply the same margin-left to label and submit button */
+#add-friend .mb-3 > label,
+#add-friend .mb-3 > .btn {
+    margin-left: 25px;
+    margin-bottom: 10px;
 }
 
 body {
@@ -162,34 +170,36 @@ body {
             <!-- Shared Locations Tab -->
             <div class="tab-pane fade" id="shared-locations" role="tabpanel" aria-labelledby="shared-locations-tab">
                 <section id="shared-locations-list" class="mt-3">
-                    <table class="table table-background">
-                        <tr>
-                            <th>ID</th>
-                            <th>Location Name</th>
-                            <th>Latitude</th>
-                            <th>Longitude</th>
-                            <th>Shared By</th>
-                            <th>Actions</th>
-                        </tr>
-                        {% for data in shared_locations_data %}
-                        <tr>
-                            <td>{{ data.location.id }}</td>
-                            <td>{{ data.location.name }}</td>
-                            <td>{{ data.location.latitude }}</td>
-                            <td>{{ data.location.longitude }}</td>
-                            <td>{{ data.sharers }}</td>
-                            <td>
-                                <a href="/{{ data.location.latitude }}/{{data.location.longitude}}/results" class="btn btn-primary">View Results</a>
-                                <form action="{{ url_for('save_shared_location', location_id=data.location.id) }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-success">Save</button>
-                                </form>
-                                <form action="{{ url_for('remove_shared_location', location_id=data.location.id) }}" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-danger">Remove</button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </table>
+                    {% if shared_locations_data %}
+                        <table class="table table-background">
+                            <tr>
+                                <th>ID</th>
+                                <th>Location Name</th>
+                                <th>Latitude</th>
+                                <th>Longitude</th>
+                                <th>Shared By</th>
+                                <th>Actions</th>
+                            </tr>
+                            {% for data in shared_locations_data %}
+                            <tr>
+                                <td>{{ data.location.id }}</td>
+                                <td>{{ data.location.name }}</td>
+                                <td>{{ data.location.latitude }}</td>
+                                <td>{{ data.location.longitude }}</td>
+                                <td>{{ data.sharers }}</td>
+                                <td>
+                                    <a href="/{{ data.location.latitude }}/{{data.location.longitude}}/results" class="btn btn-primary">View Results</a>
+                                    <form action="{{ url_for('save_shared_location', location_id=data.location.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-success">Save</button>
+                                    </form>
+                                    <form action="{{ url_for('remove_shared_location', location_id=data.location.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-danger">Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </table>
+                    {% endif %}
                 </section>
             </div>
         </div>
