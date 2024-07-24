@@ -4,7 +4,7 @@
   #map{
     height: 600px;
     width: 100%;
-  } 
+  }
     body {
       background-image: url({{ url_for('static', filename='/images/Star-background.jpg') }});
       background-size:cover;
@@ -13,19 +13,19 @@
     }
 
     .white-label{
-      color: white; 
+      color: white;
     }
 
   </style>
-  
+
   <h2 style="text-align:center; color: white;"> Find Stars! </h2>
   <div class="form-section">
     <form action = "" method="POST">
-      
+
   <div id="map"></div>
   <script async defer
     src="https://maps.googleapis.com/maps/api/js?key={{map_api_key}}&callback=initMap&libraries=marker">
-  </script>    
+  </script>
   <body>
   <form id="LocationForm">
         {{ form.hidden_tag() }}
@@ -37,7 +37,7 @@
         <input type="number" step="any" id="lng" name="lng">
         <input type="submit" value="Find nearby locations!">
     </form>
-    
+
   <form action="" method="POST">
     {% if markers %}
       <table>
@@ -53,7 +53,14 @@
           <td>{{marker["ranking"]}}</td>
           <td>{{marker["address"]}}</td>
           <td> <input type="radio" name="selection" value='{{ marker|tojson }}' ></td>
-          <td><a href="{{ url_for('reviews', marker_id=marker['label']) }}"><button>Reviews</button></a></td>
+          <td>
+            <a href="{{ url_for('reviews', address=marker['address'], longitude=marker['lng'], latitude=marker['lat']) }}">
+              <button>Reviews</button>
+            </a>
+            <script>
+              console.log("{{ marker }}");
+          </script>
+          </td>
         </tr>
         {% endfor %}
       </table>
@@ -80,13 +87,13 @@
         async function initMap() {
             const { Map } = await google.maps.importLibrary('maps');
             const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
-  
+
             map = new Map(document.getElementById('map'), {
               center: {lat: {{usr_coords["lat"]}}, lng: {{usr_coords["lng"]}}},
               zoom: 10,
               mapId: '{{map_id}}'
             });
-            
+
             // Add click event listener to the map so we can get clickes
             map.addListener('click', function(event) {
                 placeMarker(event.latLng);
@@ -99,39 +106,44 @@
                 position: {lat: {{marker.lat}}, lng: {{marker.lng}}},
                 map: map,
                 content: createMarkerContent("{{marker.label}}")
-              });           
+              });
             {% endfor %}
 
             let linkWindow = new google.maps.InfoWindow({
               pixelOffset: new google.maps.Size(-12,0)
             });
 
+            let markerInfo;
+            let popularMarker;
+
             // Add popular markers from server
             {% for marker in popular_markers %}
-              let markerInfo = {{ marker | tojson }};
-              let popularMarker = new AdvancedMarkerElement({
+              (function(markerInfo) {
+
+              popularMarker = new AdvancedMarkerElement({
                 map: map,
                 position: {lat: {{marker["latitude"]}}, lng: {{marker["longitude"]}}},
                 content: createPopularMarkerContent()
-              });           
+              });
 
               console.log(markerInfo)
 
               popularMarker.addListener('click',function() {
                 linkWindow.setContent(createLinkWindowContent(markerInfo));
-                linkWindow.open(map, popularMarker);  
+                linkWindow.open(map, popularMarker);
                 map.setCenter(popularMarker.position);
 
-              });  
-            {% endfor %}
+              });
 
-          }
-        
+          })({{ marker | tojson }});
+          {% endfor %}
+  }
+
         function createLinkWindowContent(marker){
           console.log(marker)
           let lat = marker.latitude;
           let lng = marker.longitude;
-          let address = marker.address;  
+          let address = marker.address;
           console.log(lat)
           console.log(lng)
           return `
@@ -144,16 +156,16 @@
               </p>
           `;
         }
-        
+
         function createMarkerContent(label){
           const svgContent = `<svg fill="#001adb" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 425.963 425.963" xml:space="preserve" stroke="#001adb"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <g> <path d="M213.285,0h-0.608C139.114,0,79.268,59.826,79.268,133.361c0,48.202,21.952,111.817,65.246,189.081 c32.098,57.281,64.646,101.152,64.972,101.588c0.906,1.217,2.334,1.934,3.847,1.934c0.043,0,0.087,0,0.13-0.002 c1.561-0.043,3.002-0.842,3.868-2.143c0.321-0.486,32.637-49.287,64.517-108.976c43.03-80.563,64.848-141.624,64.848-181.482 C346.693,59.825,286.846,0,213.285,0z M274.865,136.62c0,34.124-27.761,61.884-61.885,61.884 c-34.123,0-61.884-27.761-61.884-61.884s27.761-61.884,61.884-61.884C247.104,74.736,274.865,102.497,274.865,136.62z"></path> </g> </g></svg> `;
-                
+
           const def = document.createElement('div');
           def.innerHTML = svgContent
 
           const content = document.createElement('div');
           content.classList.add('marker');
-          
+
           const labels = document.createElement('div');
           labels.textContent = label;
           labels.style.color = 'black';
@@ -177,7 +189,7 @@
           return star;
         }
 
-        
+
         function placeMarker(location) {
             markers.forEach(marker => marker.setMap(null));
             markers = [];
