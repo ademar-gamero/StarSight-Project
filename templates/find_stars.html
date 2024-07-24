@@ -53,7 +53,14 @@
           <td>{{marker["ranking"]}}</td>
           <td>{{marker["address"]}}</td>
           <td> <input type="radio" name="selection" value='{{ marker|tojson }}' ></td>
-          <td><a href="{{ url_for('reviews', marker_id=marker['label']) }}"><button>Reviews</button></a></td>
+          <td>
+            <a href="{{ url_for('reviews', address=marker['address'], longitude=marker['lng'], latitude=marker['lat']) }}">
+              <button>Reviews</button>
+            </a>
+            <script>
+              console.log("{{ marker }}");
+          </script>
+          </td>
         </tr>
         {% endfor %}
       </table>
