@@ -16,6 +16,10 @@
       color: white; 
     }
 
+    h2 {
+      margin: 15px;
+    }
+
   </style>
   
   <h2 style="text-align:center; color: white;"> Find Stars! </h2>
@@ -113,10 +117,14 @@
               pixelOffset: new google.maps.Size(-12,0)
             });
 
+            let markerInfo;
+            let popularMarker;
+
             // Add popular markers from server
             {% for marker in popular_markers %}
-              let markerInfo = {{ marker | tojson }};
-              let popularMarker = new AdvancedMarkerElement({
+              (function(markerInfo) {
+
+              popularMarker = new AdvancedMarkerElement({
                 map: map,
                 position: {lat: {{marker["latitude"]}}, lng: {{marker["longitude"]}}},
                 content: createPopularMarkerContent()
@@ -130,9 +138,10 @@
                 map.setCenter(popularMarker.position);
 
               });  
-            {% endfor %}
 
-          }
+          })({{ marker | tojson }});
+          {% endfor %}
+  }
         
         function createLinkWindowContent(marker){
           console.log(marker)
