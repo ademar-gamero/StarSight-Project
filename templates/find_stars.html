@@ -13,16 +13,31 @@
     }
 
     .white-label{
-      color: white; 
+      color: 202F5A; 
     }
 
     h2 {
       margin: 15px;
+      margin-top: 60px;
+    }
+
+    .btn {
+      background-color: #202F5A;
+      color: white;
+      margin-left: 10px;
+    }
+
+    .style {
+      background-color: rgba(211, 211, 211, 0.9);
+      color: #202F5A;
+      padding: 10px;
+      text-align: center;
+      z-index: 1;
     }
 
   </style>
   
-  <h2 style="text-align:center; color: white;"> Find Stars! </h2>
+  <h2 style="text-align:center; color: white;">  </h2>
   <div class="form-section">
     <form action = "" method="POST">
       
@@ -31,16 +46,18 @@
     src="https://maps.googleapis.com/maps/api/js?key={{map_api_key}}&callback=initMap&libraries=marker">
   </script>    
   <body>
-  <form id="LocationForm">
-        {{ form.hidden_tag() }}
-        {{ form.loc_radius.label(class="white-label")}}
-        {{ form.loc_radius }}
-        <label style="color: white" for="lat">Latitude:</label>
-        <input type="number" step="any" id="lat" name="lat">
-        <label style="color: white" for="lng">Longitude:</label>
-        <input type="number" step="any" id="lng" name="lng">
-        <input type="submit" value="Find nearby locations!">
-    </form>
+    <div class="style">
+      <form id="LocationForm">
+            {{ form.hidden_tag() }}
+            {{ form.loc_radius.label(class="white-label")}}
+            {{ form.loc_radius }}
+            <label style="color: 202F5A; padding-left: 10px" for="lat">Latitude:</label>
+            <input type="number" step="any" id="lat" name="lat">
+            <label style="color: 202F5A; padding-left: 10px" for="lng">Longitude:</label>
+            <input type="number" step="any" id="lng" name="lng">
+            <input type="submit" value="Find nearby locations!" class="btn">
+        </form>
+    </div>
     
   <form action="" method="POST">
     {% if markers %}
