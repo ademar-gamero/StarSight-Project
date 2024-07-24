@@ -1,51 +1,159 @@
 {% extends "basic_layout.html" %}
 {% block content %}
+<!DOCTYPE html>
 <html>
     <head>
         <title>Reviews</title>
-        <style>
-            .star {
-                color: gold;
-            }
-        </style>
-    </head>
+ <style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        background-image: url("{{ url_for('static', filename='images/background_2.jpg') }}");
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        background-color: #f9f9f9;
+    }
+    .container {
+        width: 80%;
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: rgba(0, 17, 64, 0.8);
+        color: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        text-align: center;
+    }
+    .address-box {
+        background-color: white;
+        color: black;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+    }
+    .star {
+        color: gold;
+    }
+    .review {
+        margin-bottom: 20px;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+        background-color: white;
+        color: black;
+        border-radius: 5px;
+    }
+    .review-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .review-pfp {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+    .review-user {
+        font-weight: bold;
+    }
+    .review div {
+        margin: 5px 0;
+    }
+    form {
+        margin-bottom: 20px;
+        background-color: white;
+        color: black;
+        padding: 15px;
+        border-radius: 5px;
+    }
+    label {
+        display: block;
+        margin-bottom: 5px;
+    }
+    input[type="range"] {
+        width: 100%;
+    }
+    textarea {
+        width: 100%;
+        resize: vertical;
+    }
+    button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
+    button:hover {
+        background-color: #45a049;
+    }
+    input, textarea {
+        color: black;
+        background-color: white;
+    }
+    h1 {
+        color: white;
+    }
+    .address-box h2, .address-box h3 {
+        color: black;
+    }
+</style>
+</head>
+
     <body>
-        <h1>Location Reviews</h1>
-        <!-- Form to submit new review-->
-        <form method="POST" action="{{ url_for('submit_review')}}">
-            <label for="rating">Rating (1 - 5):</label>
-            <input type="range" id="rating" name="rating" min="1" max="5" value="5" oninput="this.nextElementSibling.value=this.value" required>
-            <output>5</output>
-            <br>
-            <label for="comment">Comment:</label>
-            <textarea name="comment" id="comment" rows="5" cols="50" required></textarea>
-            <br>
-            <button type="submit">Submit Review</button>
-        </form>
 
-    <hr>
+        <h1> Reviews! </h1>
+        <div class="container">
+          <div class="address-box">
+            <h2>{{address}}</h2>
+            <h3>Rating: {{loc_rating}}★</h3>
+          </div>
+            <!-- Form to submit new review-->
+            <form method="POST" action="{{ url_for('submit_review', address=address, latitude=lat, longitude=lng) }}">
+                <label for="rating">Rating (1 - 5):</label>
+                <input type="range" id="rating" name="rating" min="1" max="5" value="5" oninput="this.nextElementSibling.value=this.value" required>
+                <output>5</output>
+                <br>
+                <label for="comment">Comment:</label>
+                <textarea name="comment" id="comment" rows="5" cols="50" required></textarea>
+                <br>
+                <button type="submit">Submit Review</button>
+            </form>
 
-    <!-- Display existing reviews -->
-     {% if reviews %}
-        {% for review in reviews %}
-        <div class="review">
-            <div>
-                Rating:
-                {% for _ in range(review.rating) %}
-                <span class="stars">★</span>
+            <hr>
+
+            <!-- Display existing reviews -->
+            {% if reviews != [] %}
+                {% for review in reviews %}
+                    <div class="review">
+                        <div class="review-header">
+                            <img src="{{ url_for('static', filename='images/icons/default_pfp.png') }}" alt="User Profile" class="review-pfp">
+                            <span class="review-user">{{ review["user"] }}</span>
+                        </div>
+                        <div>
+                            Rating:
+                            {% for _ in range(review["rating"]) %}
+                                <span class="star">★</span>
+                            {% endfor %}
+                            {% for _ in range(5 - review["rating"]) %}
+                                <span class="star">☆</span>
+                            {% endfor %}
+                        </div>
+                        <div>{{ review["comment"] }}</div>
+                        <div>{{ review["date"] }}</div>
+                    </div>
                 {% endfor %}
-                {% for _ in range(5 - review.rating) %}
-                <span class="stars">☆</span>
-                {% endfor %}
-            </div>
-            <div>{{ review.comment }}</div>
-            <div>{{ review.date.date() }}</div>
+            {% else %}
+                <p>There are no reviews for this location yet.</p>
+            {% endif %}
         </div>
-        {% endfor %}
-    {% else %}
-        <p>There are no reviews for this location yet.</p>
-    {% endif %}
     </body>
 </html>
-
 {% endblock %}

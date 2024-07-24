@@ -45,7 +45,8 @@
             <table style="margin-top: 75px" class="table">
                 <tr>
                     <th>ID</th>
-                    <th>Location Name</th>
+                    <th>Name</th>
+                    <th>Address</th>
                     <th>Latitude</th>
                     <th>Longitude</th>
                     <th>View Results</th>
@@ -56,6 +57,7 @@
                 <tr>
                     <td>{{ location.id }}</td>
                     <td>{{ location.name }}</td>
+                    <td>{{ location.address }}</td>
                     <td>{{ location.latitude }}</td>
                     <td>{{ location.longitude }}</td>
                     <td><a class="table-link" href="/{{ location.latitude }}/{{location.longitude}}/results">View Results</a></td>
