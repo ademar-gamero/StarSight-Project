@@ -1,18 +1,38 @@
 {% extends "basic_layout.html" %}
 
 {% block content %}
+    <style>
+        .table-link {
+            color: #4B0082;
+            text-decoration: none; /* Remove underline */
+        }
+
+        .table-link:hover {
+            color: darkred;
+            text-decoration: none; /* Ensure underline is removed on hover */
+        }
+
+        .curved-container {
+            border-radius: 10px; /* Adjust the radius as needed */
+            overflow: hidden; /* Ensure rounded corners are visible */
+        }
+
+        .table th {
+            background-color: #C4BDFE;
+            color: #000000;
+        }
+    </style>
     <body style="background-color: black"></body>
     <div class="bg-animation">
         <div id="stars"></div>
         <div id="stars2"></div>
         <div id="stars3"></div>
     </div>
-    <h1>Saved Locations</h1>
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <div class="container mt-4">
                 {% for category, message in messages %}
-                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    <div style="margin-top: 120px" class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                         {{ message }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
@@ -20,22 +40,42 @@
             </div>
         {% endif %}
     {% endwith %}
-    <table>
-        <tr>
-            <th>ID</th>
-            <th>Location Name</th>
-            <th>Latitude</th>
-            <th>Longitude</th>
-            <th>Actions</th>
-        </tr>
-        {% for location in locations %}
-        <tr>
-            <td>{{ location.id }}</td>
-            <td>{{ location.name }}</td>
-            <td>{{ location.latitude }}</td>
-            <td>{{ location.longitude }}</td>
-            <td><a href="/{{ location.latitude }}/{{location.longitude}}/results">View Results</a></td>
-        </tr>
-        {% endfor %}
-    </table>
+    {% if locations %}
+        <div class="curved-container">
+            <table style="margin-top: 75px" class="table">
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Latitude</th>
+                    <th>Longitude</th>
+                    <th>View Results</th>
+                    <th>Remove Location</th>
+                    <th>Share Location</th>
+                </tr>
+                {% for location in locations %}
+                <tr>
+                    <td>{{ location.id }}</td>
+                    <td>{{ location.name }}</td>
+                    <td>{{ location.address }}</td>
+                    <td>{{ location.latitude }}</td>
+                    <td>{{ location.longitude }}</td>
+                    <td><a class="table-link" href="/{{ location.latitude }}/{{location.longitude}}/results">View Results</a></td>
+                    <td><a class="table-link" href="/saved_locations/remove_saved/{{location.id}}">Remove Location</a></td>
+                    <td>
+                        <form action="{{ url_for('share_location', location_id=location.id) }}" method="POST" class="d-flex align-items-center justify-content-center">
+                            <select name="friend_id" class="form-select">
+                                <option value="" selected disabled>Choose a friend</option>
+                                {% for friend in friends %}
+                                <option value="{{ friend.id }}">{{ friend.username }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary mt-1 ms-2" style="margin-bottom: 5px">Share</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% endif %}
 {% endblock %}

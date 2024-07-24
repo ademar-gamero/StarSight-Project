@@ -6,6 +6,7 @@ instance/*
 !instance/.gitignore
 .webassets-cache
 .env
+environment.env
 
 ### Flask.Python Stack ###
 # Byte-compiled / optimized / DLL files
@@ -86,6 +87,9 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+# .idea files
+.idea
 
 # IPython
 profile_default/
@@ -258,5 +262,8 @@ poetry.toml
 
 # LSP config files
 pyrightconfig.json
+
+# run.sh file
+run.sh
 
 # End of https://www.toptal.com/developers/gitignore/api/python,flask

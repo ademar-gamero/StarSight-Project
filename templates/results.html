@@ -1,5 +1,6 @@
 {% extends "basic_layout.html" %}
 {% block content %}
+<!DOCTYPE html>
 <html>
 <head>
     <title>Star Gazing Forecast</title>
@@ -35,9 +36,11 @@
             border-radius: 4px;
             box-shadow: 0 0 5px rgba(0,0,0,0.1);
             color: #fff; 
+            text-align: center;
         }
         .section-content {
             padding: 10px;
+            text-align: center;
         }
         table {
             width: 100%;
@@ -58,58 +61,83 @@
         tr:hover {
             background-color: #f1f1f1;
         }
-        .save-button {
-            background-color: #007bff; 
+   .button-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+        .button-link {
+            background-color: #660ddb; 
             color: #fff; 
             padding: 10px 20px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            text-decoration: none;
             display: inline-block;
-            margin-top: 10px;
         }
-        .save-button:hover {
-            background-color: #0056b3; 
+        .form-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        .form-container input[type="text"] {
+            margin-right: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Star Gazing Forecast</h1>
-       {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-              <div class="container mt-4">
-                  {% for category, message in messages %}
-                      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                          {{ message }}
-                          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                      </div>
-                  {% endfor %}
-              </div>
-          {% endif %}
-      {% endwith %}   
-        <h2> Your Location: {{point[0]}},{{point[1]}} <h2>
+        <div class="button-container">
+            <div class="form-container">
+                <form action="" method="POST">
+                    <input type="text" id="nameLabel" name="name" placeholder="Enter Name">
+                    <input type="hidden" name="hidden_lat" value="{{point["lat"]}}">
+                    <input type="hidden" name="hidden_lng" value="{{point["lng"]}}">
+                    <input type="submit" value="Save Location!" class="button-link">
+                </form>
+            </div>
+            <a href="{{ url_for('find_constellations', latitude=point["lat"], longitude=point["lng"]) }}" class="button-link">Find Constellations Here!</a>
+        </div>
+        
+      <h1>Star Gazing Forecast</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container mt-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}   
+        
+        <h2>Location Address: {{address}}</h2>
+        <h2>Location Coordinates: {{point["lat"]}}, {{point["lng"]}}</h2>        
         <div class="section">
             <div class="section-title">Starlight Ranking</div>
-                <div class="section-content">
-                    <p>{{rating}}</p>
-                </div>
+            <div class="section-content">
+                <p>{{rating}}</p>
             </div>
-        
-            <div class="section">
-                <div class="section-title">Light Pollution</div>
-                    <div class="section-content">
-                        <p>{{light_rating}}</p>
-                    </div>
+        </div>
+        <div class="section">
+            <div class="section-title">Light Pollution</div>
+            <div class="section-content">
+                <p>{{light_rating}}</p>
             </div>
-        
-            <div class="section">
-                <div class="section-title">Lunar Phase</div>
-                <div class="section-content">
-                    <p>{{ lunar_phase }}</p>
-                </div>
+        </div>
+        <div class="section">
+            <div class="section-title">Lunar Phase</div>
+            <div class="section-content">
+                <p>{{ lunar_phase }}</p>
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">Lunar Light Impact</div>
+            <div class="section-content">
+                <p>{{ lunar_impact }}</p>
             </div>
         </div>
         <div class="section">
@@ -122,30 +150,16 @@
                     </tr>
                 </thead>
                 <tbody>
-                  {% for report in weather_report %}
-                    <tr>
-                      <td>{{report[0]}}</td>
-                      <td>{{report[1]}}</td>
-                    </tr>
-                  {% endfor %}
+                    {% for report in weather_report %}
+                        <tr>
+                            <td>{{report[0]}}</td>
+                            <td>{{report[1]}}</td>
+                        </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
-      <form action="" method="POST">
-        <label for="nameLabel"> Enter Name</label>
-        <input type="text" id="nameLabel" name="name">
-        <input type="hidden" name="hidden_lat" value="{{point[0]}}">
-        <input type="hidden" name="hidden_lng" value="{{point[1]}}">
-        <input type="submit" value="Save Location!">
-      </form>
     </div>
-    <script>
-        function saveLocation() {
-            //need to save location here
-            //id rather not use javascript but oh well
-            //alert("Location saved!");
-        }
-    </script>
 </body>
 </html>
 {% endblock %}

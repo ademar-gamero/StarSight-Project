@@ -11,47 +11,47 @@
             display: flex;
             height: 100vh;
             margin: 0;
+            font-family: 'Times New Roman', Times, serif;
         }
-        h2{
-            margin-bottom: 80px;
+        h2 {
+            margin-bottom: 40px; /* Adjust the margin as necessary */
             color: black;
         }
-            a {
-                color: rebeccapurple;
-                text-decoration: none; /* Remove underline from links */
-                text-decoration-color: rebeccapurple;
-            }
-        .left-half{
+        a {
+            color: rebeccapurple;
+            text-decoration: none; /* Remove underline from links */
+            text-decoration-color: rebeccapurple;
+        }
+        .left-half {
             flex: 1;
             background-image: url({{ url_for('static', filename='images/login-background-2.jpg') }});
             background-size: cover; /* Scales the image to be as large as possible without cropping */
             background-position: center;
             background-repeat: no-repeat;
         }
-        .right-half{
+        .right-half {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             background-color: white;
         }
-        .login-container{
+        .login-container {
             max-width: 350px; /* Adjust the max-width to make it wider */
             width: 100%; /* Make the container responsive */
-            height: 500px;
+            height: auto; /* Set the height to auto */
             padding: 20px;
             background: white;
             border-radius: 10px;
             margin-top: -50px; /* Adjust as necessary to move it up */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
         .mb-3:first-of-type {
-            margin-top: 80px; /* Increase this value to add more space between starsight login and username */
+            margin-top: 50px; /* Decrease this value to reduce the space */
         }
-        .create-account{
+        .create-account {
             margin-top: 20px;
         }
-
     </style>
 </head>
 <body>

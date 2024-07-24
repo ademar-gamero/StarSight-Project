@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-repeat: no-repeat;
+            background-color: black;
+            background-position: center;
+            background-size: cover;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .navbar {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            background-color: rgba(32, 47, 90, 0.9);
+        }
+        .navbar-brand {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #FFD700 !important; /* Gold color for hover effect */
+        }
+        .navbar-toggler {
+            border-color: #FFD700;
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 215, 0, 1%29' stroke-width='2' linecap='round' linejoin='round' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }
+        .container {
+            background-color: rgba(211, 211, 211, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 50%;
+            z-index: 1;
+        }
+        .result-image {
+            max-width: 50%;
+            height: 50%;
+            margin: 5px;
+            margin-top: 50px;
+            z-index: 1;
+        }
+        h1 {
+            color: #202F5A;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: x-large;
+            font-weight: bold;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            color: #555;
+            text-align: left;
+            text-transform: capitalize;
+            font-size: medium;
+        }
+        .btn-primary {
+            margin-top: 20px;
+            background-color: #202F5A;
+            color: white;
+        }
+        .bg-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: 0; /* Ensure it's behind other content */
+            overflow: hidden;
+        }
+        .bg-animation div {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png'); /* Example background image */
+            background-size: cover;
+            animation: moveBackground 60s linear infinite;
+        }
+        #stars {
+            opacity: 0.8;
+            animation: moveBackground 180s linear infinite;
+        }
+        @keyframes moveBackground {
+            0% { background-position: 0 0; }
+            100% { background-position: 100% 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div id="stars"></div>
+    </div>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">StarSight</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/main_menu">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/find_stars">Find Stars</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/saved_locations">Saved Locations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/upload_photo">Detect Constellations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/friends">Friends</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    {% if annotated_image %}
+            <img src="{{ url_for('static', filename=annotated_image) }}" alt="Annotated Image" class="result-image">
+    {% endif %}
+    <div class="container">
+        <h1>Your Constellations:</h1>
+        <ul>
+            {% for constellation in constellations %}
+                <li>{{ constellation }}</li>
+            {% endfor %}
+        </ul>
+        <a href="{{ url_for('upload_photo') }}" class="btn btn-primary">Upload Another</a>
+        <a href="{{ url_for('find_constellations_lm', constellations=constellations) }}" class="btn btn-primary">Learn More</a>
+    </div>
+</body>
+</html>

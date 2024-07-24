@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-image: url({{ url_for('static', filename='/images/Star-background.jpg') }});
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: cover;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            margin: 0;
+            font-family: 'Times New Roman', Times, serif;
+        }
+        .navbar {
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            background-color: rgba(32, 47, 90, 0.9);
+        }
+        .navbar-brand {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #FFD700 !important; /* Gold color for hover effect */
+        }
+        .navbar-toggler {
+            border-color: #FFD700;
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 215, 0, 1%29' stroke-width='2' linecap='round' linejoin='round' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
+        }
+        .content {
+            background-color: rgba(211, 211, 211, 0.8);
+            padding: 50px;
+            border-radius: 10px;
+            text-align: center;
+            width: 50%;
+            margin-top: 100px;
+        }
+        h1 {
+            color: #202F5A;
+            font-weight: bold;
+        }
+        p {
+            color: #555;
+            font-size: medium;
+        }
+        .btn-primary {
+            margin-top: 20px;
+            background-color: #202F5A;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">StarSight</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="/main_menu">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/find_stars">Find Stars</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/saved_locations">Saved Locations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/upload_photo">Detect Constellations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/friends">Friends</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="content">
+        <h1>What am I looking at?</h1>
+        <p>Upload a photo of the night sky to uncover the constellations waiting to be discovered.</p>
+        <form action="{{ url_for('upload_photo') }}" method="POST" enctype="multipart/form-data">
+            <input type="file" name="photo" class="form-control" required>
+            <button type="submit" class="btn btn-primary">Upload a photo</button>
+        </form>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js" integrity="sha384-eMNn1+ITKQ1JgNJz5gCGke/z5+R5UBrk0p4T5eVvYmBst0hU1LvTQAd7hJ23kpcH" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiY2yP/5+c6py6qrEHCy8fN24lY9ErYx0V3+45nGJpG5jhWnCRBJ+8q2A" crossorigin="anonymous"></script>
+</body>
+</html>
