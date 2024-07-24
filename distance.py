@@ -85,8 +85,7 @@ class CityAPI():
                             dict2 = await response.json()
                         if len(dict2) == 0:
                             continue
-                        #pop = dict2[0]["population"]
-                        pop = 50000
+                        pop = dict2[0]["population"]
                         if 50000 <= pop <= 100000:
                             score_obj.lower_score(1)
                             score_obj.light_pollution -= 1
