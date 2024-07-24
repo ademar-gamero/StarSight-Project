@@ -162,11 +162,13 @@
           let lng = marker.longitude;
           let address = marker.address;  
           let rating = marker.rating/marker.reviewer_count;
+          let reviewers = marker.reviewer_count;
           console.log(lat)
           console.log(lng)
           return `
             <h3>${address}</h3>
-            <h3>${rating}★</h3>
+            <h3>Rating: ${rating}★</h3>
+            <h3> Reviewers: ${reviewers}</h3>
               <p>
                 <a href ="/reviews/${address}/${lat}/${lng}">View Reviews</a> |
                 <a href ="/${lat}/${lng}/results">View Results</a>
