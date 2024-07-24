@@ -9,7 +9,7 @@ import nest_asyncio
 from flask import Flask, render_template, url_for, flash, redirect, request, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Text
+from sqlalchemy import Text, and_
 from werkzeug.security import generate_password_hash,check_password_hash
 from werkzeug.utils import secure_filename
 from inference_sdk import InferenceHTTPClient
@@ -27,6 +27,7 @@ from roboflow import Roboflow
 import supervision as sv
 import cv2
 import numpy as np
+from sqlalchemy import func
 
 
 
@@ -65,7 +66,7 @@ class User(db.Model, UserMixin):
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=False, nullable=True)
-    rating = db.Column(db.Numeric(4, 7), unique=True, nullable=True)
+    rating = db.Column(db.Numeric(4, 7), unique=False, nullable=True)
     reviewer_count = db.Column(db.Integer, unique=False, nullable=True)
     address = db.Column(db.String(256),unique=False,nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
@@ -73,6 +74,7 @@ class Location(db.Model):
     elevation = db.Column(db.Numeric(6, 1), unique=False, nullable=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     shared_with = db.Column(db.Text, nullable=True)
+
     def __repr__(self):
         return f"Location({self.id},{self.latitude},{self.longitude})"
 
@@ -86,7 +88,7 @@ class Location(db.Model):
                 'latitude': float(self.latitude),
                 'longitude': float(self.longitude),
                 'elevation': float(self.elevation) if self.elevation else None,
-                'shared_with': self.shared_with  # Include shared_with in the dictionary
+                'shared_with': self.shared_with if self.shared_with else None  # Include shared_with in the dictionary
                 }
     
     
@@ -130,8 +132,23 @@ with app.app_context():
 
     address = "testing"
     if Location.query.filter_by(latitude=43.982465, longitude=-89.078786,reviewer_count=5).first() == None:
-        test_1 = Location(name="test_db_5",reviewer_count=5,latitude=43.982465,longitude=-89.078786,address=address)
-        db.session.add(test_1)
+        test_pop_1 = Location(name="test_pop_1",reviewer_count=5,rating=4.2,latitude=43.982465,longitude=-89.078786,address=address)
+        db.session.add(test_pop_1)
+        db.session.commit()
+    if Location.query.filter_by(latitude=38.72708333, longitude=-106.47411111,reviewer_count=5).first() == None:
+        address = "Gunnison National Forrest,Tincup, Colorado"
+        test_pop_2 = Location(name="test_pop_2",reviewer_count=5,rating=4.5,latitude=38.590448,longitude=-103.324181,address=address)
+        db.session.add(test_pop_2)
+        db.session.commit()
+    if Location.query.filter_by(latitude=46.157574, longitude=-93.166120,reviewer_count=5).first() == None:
+        address = "Snake Creek River,Isle, Minnesota"
+        test_pop_3 = Location(name="test_pop_3",reviewer_count=5,rating=4.1,latitude=38.590448,longitude=-103.324181,address=address)
+        db.session.add(test_pop_3)
+        db.session.commit()
+    if Location.query.filter_by(latitude=45.313161, longitude=-89.315375,reviewer_count=5).first() == None:
+        address = "Summit, Wisconsin 54435"
+        test_pop_3 = Location(name="test_pop_4",reviewer_count=5,rating=4.1,latitude=38.590448,longitude=-103.324181,address=address)
+        db.session.add(test_pop_3)
         db.session.commit()
 
 def clear_session():
@@ -275,7 +292,7 @@ def find_stars():
         flash("Please select a location from the interactive map or enter a valid latitude/longitude manually")
         return render_template("find_stars.html", form=form, map_api_key = api_key,map_id=map_id,usr_coords = zoom_coords,markers=[])
 
-       origin = (lat,lng)
+       origin = (float(lat), float(lng))
        nearby_locs = cur_usr.calculate_nearby_locs([], origin, search_radius)
        optimal_locs = []
        loop = asyncio.get_event_loop()
@@ -503,7 +520,7 @@ def constellation_results():
     return render_template('constellation_results.html', constellations=constellations, annotated_image=annotated_image)
 
 def detect_constellations(filepath):
-    rf = Roboflow(api_key="BmaSz5YCzhmjapwU7201")
+    rf = Roboflow(api_key=os.getenv("ROBOFLOW_API_KEY"))
     project = rf.workspace().project("constellation-dsphi")
     model = project.version(1).model
     result = model.predict(filepath, confidence=40, overlap=30).json()
@@ -532,6 +549,21 @@ def detect_constellations(filepath):
     cv2.imwrite(annotated_image_path, annotated_image)
     
     return labels, "uploads/annotated_" + os.path.basename(filepath)
+
+@app.route("/find_constellations/learn_more")
+def find_constellations_lm():
+    display_constellations = []
+    constellations = request.args.getlist('constellations')
+    for constellation in constellations:
+        db_constellation = Constellation.query.filter(func.lower(Constellation.name).ilike(func.lower(constellation))).first()
+        if db_constellation:
+            display_constellations.append({
+                "name": db_constellation.name,
+                "img": db_constellation.img,
+                "description": db_constellation.description
+            })
+    return render_template("find_constellations.html", constellations=display_constellations)
+
 
 @app.route('/friends', methods=["GET", "POST"])
 @login_required
@@ -637,22 +669,53 @@ def remove_shared_location(location_id):
 
 # reviews code
 # TODO: make reviews dynamic for locations
-@app.route('/reviews/<marker_id>')
-def reviews(marker_id):
-    reviews = Reviews.query.filter_by(location_id=int(marker_id)).order_by(Reviews.date.desc()).all()
-    return render_template('reviews.html', reviews=reviews)
+@app.route('/reviews/<address>/<longitude>/<latitude>')
+def reviews(address, longitude, latitude):
+    location = Location.query.filter(
+        and_(
+            Location.address == address,
+            Location.longitude == longitude,
+            Location.latitude == latitude
+        )
+    ).first()
+
+    if location.reviewer_count == 0:
+        flash("Location not found", "error")
+        return redirect(url_for("find_stars"))
+    
+    reviews = Reviews.query.filter_by(location_id=location.id).order_by(Reviews.date.desc()).all()
+    return render_template('reviews.html', location=location, reviews=reviews)
 
 
-@app.route('/submit_review/<marker_id>', methods=['POST'])
-def submit_review(marker_id):
+@app.route('/submit_review/<address>/<longitude>/<latitude>', methods=['POST'])
+def submit_review(address, longitude, latitude):
+    location = Location.query.filter(
+        and_(
+            Location.address == address,
+            Location.longitude == longitude,
+            Location.latitude == latitude
+        )
+    ).first()
+    if not location:
+        location.reviewer_count += 1
+        flash("Location not found", "error")
+        return redirect(url_for("find_stars"))
+    
     rating = int(request.form['rating'])
     comment = request.form['comment']
-    new_review = Reviews(rating=rating, comment=comment, location_id=int(marker_id))
+    new_review = Reviews(
+        rating=rating, 
+        comment=comment, 
+        location_id=location.id,
+        user_id = curr_user.id
+    )
+    location.reviewer_count += 1
     db.session.add(new_review)
     db.session.commit()
-    return redirect(url_for('review'))
+    flash("Your review has been submitted successfully!", "success")
+    return redirect(url_for('review', address=address, longitude=longitude, latitude=latitude))
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0')
+    app.run(debug=True, host="0.0.0.0")
 
