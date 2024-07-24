@@ -21,6 +21,23 @@
             position: fixed;
             top: 0;
             z-index: 1000;
+            background-color: rgba(32, 47, 90, 0.9);
+        }
+        .navbar-brand, .nav-link {
+            color: white !important;
+            text-shadow: 2px 2px 4px #000000;
+        }
+        .nav-link {
+            transition: color 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #FFD700 !important; /* Gold color for hover effect */
+        }
+        .navbar-toggler {
+            border-color: #FFD700;
+        }
+        .navbar-toggler-icon {
+            background-image: url("data:image/svg+xml;charset=utf8,%3Csvg viewBox='0 0 30 30' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath stroke='rgba%28255, 215, 0, 1%29' stroke-width='2' linecap='round' linejoin='round' d='M4 7h22M4 15h22M4 23h22'/%3E%3C/svg%3E");
         }
         .content {
             background-color: rgba(211, 211, 211, 0.8);
@@ -46,7 +63,7 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">StarSight</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">

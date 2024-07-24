@@ -16,6 +16,10 @@
       color: white; 
     }
 
+    h2 {
+      margin: 15px;
+    }
+
   </style>
   
   <h2 style="text-align:center; color: white;"> Find Stars! </h2>
@@ -53,7 +57,14 @@
           <td>{{marker["ranking"]}}</td>
           <td>{{marker["address"]}}</td>
           <td> <input type="radio" name="selection" value='{{ marker|tojson }}' ></td>
-          <td><a href="{{ url_for('reviews', marker_id=marker['label']) }}"><button>Reviews</button></a></td>
+          <td>
+            <a href="{{ url_for('reviews', address=marker['address'], longitude=marker['lng'], latitude=marker['lat']) }}">
+              <button>Reviews</button>
+            </a>
+            <script>
+              console.log("{{ marker }}");
+          </script>
+          </td>
         </tr>
         {% endfor %}
       </table>
@@ -106,10 +117,14 @@
               pixelOffset: new google.maps.Size(-12,0)
             });
 
+            let markerInfo;
+            let popularMarker;
+
             // Add popular markers from server
             {% for marker in popular_markers %}
-              let markerInfo = {{ marker | tojson }};
-              let popularMarker = new AdvancedMarkerElement({
+              (function(markerInfo) {
+
+              popularMarker = new AdvancedMarkerElement({
                 map: map,
                 position: {lat: {{marker["latitude"]}}, lng: {{marker["longitude"]}}},
                 content: createPopularMarkerContent()
@@ -123,9 +138,10 @@
                 map.setCenter(popularMarker.position);
 
               });  
-            {% endfor %}
 
-          }
+          })({{ marker | tojson }});
+          {% endfor %}
+  }
         
         function createLinkWindowContent(marker){
           console.log(marker)
