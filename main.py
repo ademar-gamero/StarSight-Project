@@ -67,7 +67,7 @@ class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(30), unique=False, nullable=True)
     rating = db.Column(db.Numeric(4, 7), unique=False, nullable=True)
-    reviewer_count = db.Column(db.Integer, unique=False, nullable=True)
+    reviewer_count = db.Column(db.Integer, unique=False, default=0)
     address = db.Column(db.String(256),unique=False,nullable=True)
     latitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
     longitude = db.Column(db.Numeric(4, 7), unique=False, nullable=False)
@@ -714,15 +714,17 @@ def submit_review(address, longitude, latitude):
             Location.reviewer_count > 0
         )
     ).first()
-    
+    print(location)
 
     rating = int(request.form['rating'])
     comment = request.form['comment']
     new_review = None
     if user:
-        if not location:
-            new_reviewed_location = Location(address=address,latitude=latitude,longitude=longitude)
+        if location == None:
+            new_reviewed_location = Location(address=address,latitude=latitude,longitude=longitude, reviewer_count=0)
             new_reviewed_location.reviewer_count += 1
+            db.session.add(new_reviewed_location)
+            db.session.commit()
             new_review = Reviews(
                 rating=rating, 
                 comment=comment, 
